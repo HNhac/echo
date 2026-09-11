@@ -6,7 +6,7 @@ import { Clapperboard, Volume2, VolumeX } from "lucide-react";
 import { studioFilm } from "@/config/brand-media";
 import { cn } from "@/lib/utils";
 
-export function StudioFilm() {
+export function StudioFilm({ posterSrc = "" }: { posterSrc?: string }) {
   const id = useId();
   const sectionRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -14,6 +14,7 @@ export function StudioFilm() {
   const [muted, setMuted] = useState(true);
   const [videoBroken, setVideoBroken] = useState(false);
   const useYoutube = Boolean(studioFilm.youtubeId?.trim());
+  const poster = posterSrc;
 
   useEffect(() => {
     mutedRef.current = muted;
@@ -108,7 +109,7 @@ export function StudioFilm() {
                 autoPlay
                 playsInline
                 preload="auto"
-                poster={studioFilm.posterSrc}
+                poster={poster || undefined}
                 muted={muted}
                 loop
                 onLoadedData={attemptPlay}

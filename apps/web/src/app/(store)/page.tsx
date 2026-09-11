@@ -1,27 +1,34 @@
-import { Hero } from "@/components/home/hero";
-import { TrustStrip } from "@/components/home/trust-strip";
-import { Categories } from "@/components/home/categories";
-import { FlashPicksRails } from "@/components/home/flash-picks-rails";
-import { FeaturedProducts } from "@/components/home/featured";
-import { FeaturedLooksCarousel } from "@/components/home/featured-looks-carousel";
-import { DesignManifesto } from "@/components/home/design-manifesto";
-import { StudioFilm } from "@/components/home/studio-film";
-import { EditorialStrip } from "@/components/home/editorial-strip";
-import { Newsletter } from "@/components/home/newsletter";
+import { JsonLd } from "@/components/seo/json-ld";
+import { HomeView } from "@/components/home/home-view";
+import { fetchHomeCatalog } from "@/lib/store-api";
+import { metadataForPage } from "@/lib/page-seo";
+import { getSiteUrl } from "@/lib/site";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata() {
+  return metadataForPage(
+    "home",
+    "Thời trang bé gái",
+    "Thời trang bé gái 1–10 tuổi — váy đầm, set bộ, áo và phụ kiện. Vải mềm, form dễ mặc, size 90–140.",
+  );
+}
+
+export default async function Home() {
+  const catalog = await fetchHomeCatalog();
+
   return (
     <>
-      <Hero />
-      <TrustStrip />
-      <Categories />
-      <FlashPicksRails />
-      <FeaturedProducts />
-      <FeaturedLooksCarousel />
-      <DesignManifesto />
-      <StudioFilm />
-      <EditorialStrip />
-      <Newsletter />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "ECHO",
+          url: getSiteUrl(),
+          description: "Thời trang bé gái 1–10 tuổi — váy đầm, set bộ, áo và phụ kiện.",
+        }}
+      />
+      <HomeView catalog={catalog} />
     </>
   );
 }

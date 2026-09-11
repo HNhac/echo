@@ -1,11 +1,11 @@
-import Link from "next/link";
-import { featuredOf } from "@/data/catalog";
+import { ShopLink as Link } from "@/components/store/shop-link";
+import type { Product } from "@echo/shared";
 import { ProductCard } from "@/components/product/product-card";
 import { ArrowUpRight } from "lucide-react";
-import { fetchProducts } from "@/lib/store-api";
 
-export async function FeaturedProducts() {
-  const featuredProducts = featuredOf(await fetchProducts());
+export function FeaturedProducts({ products }: { products: Product[] }) {
+  if (!products.length) return null;
+
   return (
     <section id="san-pham" className="bg-[var(--surface)] py-14 sm:py-20">
       <div className="shop-wrap">
@@ -27,7 +27,7 @@ export async function FeaturedProducts() {
         </div>
 
         <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
-          {featuredProducts.map((p) => (
+          {products.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>

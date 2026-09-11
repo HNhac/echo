@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 
 type Breadcrumb = { label: string; href?: string };
 

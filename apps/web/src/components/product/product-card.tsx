@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import type { Product } from "@/data/catalog";
 import { flashSalePriceFmt } from "@/data/catalog";
 import { mediaUrl } from "@/lib/media";
@@ -19,21 +19,25 @@ export function ProductCard({ product, className }: Props) {
         aria-label={product.name}
       >
         <span className="relative block aspect-[3/4] overflow-hidden rounded-[1.05rem] bg-[var(--surface-2)]">
-          <Image
-            src={mediaUrl(product.image)}
-            alt={product.name}
-            fill
-            className="object-cover transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/card:scale-[1.06] group-hover/card:opacity-0"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-          <Image
-            src={mediaUrl(hoverImage)}
-            alt=""
-            fill
-            className="absolute inset-0 object-cover opacity-0 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/card:scale-[1.04] group-hover/card:opacity-100"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            aria-hidden
-          />
+          {mediaUrl(product.image) ? (
+            <Image
+              src={mediaUrl(product.image)}
+              alt={product.name}
+              fill
+              className="object-cover transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/card:scale-[1.06] group-hover/card:opacity-0"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+          ) : null}
+          {mediaUrl(hoverImage) ? (
+            <Image
+              src={mediaUrl(hoverImage)}
+              alt=""
+              fill
+              className="absolute inset-0 object-cover opacity-0 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/card:scale-[1.04] group-hover/card:opacity-100"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              aria-hidden
+            />
+          ) : null}
         </span>
         {product.flashPct ? (
           <span className="absolute left-4 top-4 rounded-full bg-[var(--accent)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">

@@ -1,41 +1,68 @@
-import type { CreateOrderInput, Order } from "@echo/shared";
-import { products, type Product } from "@/data/catalog";
+import type { CreateOrderInput, HomeCatalog, Order, Product, SeoPage } from "@echo/shared";
 
 function isHttpUrl(value: string | undefined) {
   return Boolean(value && /^https?:\/\//i.test(value));
 }
 
-/** Browser uses NEXT_PUBLIC_API_URL (often `/echo-api`). SSR uses API_URL on the VPS loopback. */
 export function getApiBase() {
-  const pub = process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== "undefined") return "/echo-api";
+
   const internal = process.env.API_URL;
-
-  if (typeof window === "undefined") {
-    if (internal) return internal.replace(/\/$/, "");
-    if (isHttpUrl(pub)) return pub!.replace(/\/$/, "");
-    return "http://127.0.0.1:4000";
-  }
-
-  if (pub) return pub.replace(/\/$/, "");
-  return "/echo-api";
+  if (internal) return internal.replace(/\/$/, "");
+  const pub = process.env.NEXT_PUBLIC_API_URL;
+  if (isHttpUrl(pub)) return pub!.replace(/\/$/, "");
+  return "http://127.0.0.1:4000";
 }
 
-export const API_URL = getApiBase();
+const noStore = { cache: "no-store" as RequestCache, headers: { "Cache-Control": "no-store" } };
 
-export async function fetchProducts(): Promise<Product[]> {
+async function getJson<T>(path: string): Promise<T | null> {
   try {
-    const res = await fetch(`${getApiBase()}/products`, { cache: "no-store" });
-    if (!res.ok) throw new Error("api");
-    const data = (await res.json()) as Product[];
-    return Array.isArray(data) && data.length ? data : products;
+    const res = await fetch(`${getApiBase()}${path}`, noStore);
+    if (!res.ok) return null;
+    return (await res.json()) as T;
   } catch {
-    return products;
+    return null;
   }
+}
+
+export async function fetchHomeCatalog(): Promise<HomeCatalog> {
+  const data = await getJson<HomeCatalog>("/catalog/home");
+  return (
+    data ?? {
+      featured: [],
+      flash: [],
+      picks: [],
+      looks: [],
+      categories: [],
+    }
+  );
+}
+
+export async function fetchProducts(params?: {
+  category?: string;
+  featured?: boolean;
+  exclude?: string;
+  limit?: number;
+}): Promise<Product[]> {
+  const q = new URLSearchParams();
+  if (params?.category) q.set("category", params.category);
+  if (params?.featured) q.set("featured", "1");
+  if (params?.exclude) q.set("exclude", params.exclude);
+  if (params?.limit) q.set("limit", String(params.limit));
+  const suffix = q.size ? `?${q.toString()}` : "";
+  const data = await getJson<Product[]>(`/products${suffix}`);
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchProductBySlug(slug: string): Promise<Product | undefined> {
-  const all = await fetchProducts();
-  return all.find((p) => p.slug === slug);
+  const data = await getJson<Product>(`/products/${encodeURIComponent(slug)}`);
+  if (!data || !("slug" in data)) return undefined;
+  return data;
+}
+
+export async function fetchSeoPage(id: string): Promise<SeoPage | null> {
+  return getJson<SeoPage>(`/pages/${encodeURIComponent(id)}`);
 }
 
 export async function createOrder(payload: CreateOrderInput): Promise<Order> {

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { motion } from "framer-motion";
 import { Heart, Shirt, Sparkles } from "lucide-react";
 import { brandTagline } from "@/config/brand-media";

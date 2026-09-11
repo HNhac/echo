@@ -43,6 +43,16 @@ export function IconPeople() {
   );
 }
 
+export function IconSeo() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M16 16.5 21 21.5" />
+      <path d="M8.5 11h5M11 8.5v5" />
+    </svg>
+  );
+}
+
 export function IconLogout() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>

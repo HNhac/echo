@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { brand } from "@/config/brand";
 import { BrandMark } from "@/components/layout/brand-mark";
 

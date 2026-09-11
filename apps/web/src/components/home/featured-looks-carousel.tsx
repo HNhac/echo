@@ -2,22 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { featuredLooks } from "@/data/featured-looks";
+import type { Product } from "@/data/catalog";
+import { mediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 const AUTO_MS = 5000;
 const PAUSE_MS = 12_000;
 
-const ACCENT: Record<(typeof featuredLooks)[number]["accent"], string> = {
-  blush: "from-[var(--accent)]/30 via-transparent to-transparent",
-  peach: "from-orange-200/40 via-transparent to-transparent",
-  lilac: "from-violet-400/25 via-transparent to-transparent",
-  mint: "from-emerald-400/20 via-transparent to-transparent",
-};
-
-export function FeaturedLooksCarousel() {
+export function FeaturedLooksCarousel({ products }: { products: Product[] }) {
+  const slides = products;
   const scrollerRef = useRef<HTMLDivElement>(null);
   const hoverRef = useRef(false);
   const pauseUntil = useRef(0);
@@ -32,10 +27,10 @@ export function FeaturedLooksCarousel() {
 
   const update = useCallback(() => {
     const el = scrollerRef.current;
-    if (!el) return;
+    if (!el || !slides.length) return;
     const step = getStep();
-    setActive(Math.min(Math.max(Math.round(el.scrollLeft / step), 0), featuredLooks.length - 1));
-  }, []);
+    setActive(Math.min(Math.max(Math.round(el.scrollLeft / step), 0), slides.length - 1));
+  }, [slides.length]);
 
   const bump = () => {
     pauseUntil.current = Date.now() + PAUSE_MS;
@@ -77,14 +72,16 @@ export function FeaturedLooksCarousel() {
       if (hoverRef.current) return;
       if (Date.now() < pauseUntil.current) return;
       const el = scrollerRef.current;
-      if (!el) return;
+      if (!el || slides.length < 2) return;
       const max = el.scrollWidth - el.clientWidth;
       if (max <= 0) return;
       if (el.scrollLeft >= max - 8) el.scrollTo({ left: 0, behavior: "smooth" });
       else el.scrollBy({ left: getStep(), behavior: "smooth" });
     }, AUTO_MS);
     return () => window.clearInterval(id);
-  }, []);
+  }, [slides.length]);
+
+  if (!slides.length) return null;
 
   return (
     <section
@@ -107,7 +104,7 @@ export function FeaturedLooksCarousel() {
             Outfit cho bé
           </h2>
           <p className="mt-2 text-sm text-[var(--ink-muted)]">
-            Chọn set rồi vào đúng danh mục váy, áo hay phụ kiện.
+            Ảnh từ catalog CMS — bấm vào để xem sản phẩm.
           </p>
           <div className="mt-5 flex justify-center gap-2">
             <button
@@ -133,33 +130,32 @@ export function FeaturedLooksCarousel() {
           ref={scrollerRef}
           className="mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {featuredLooks.map((look) => (
+          {slides.map((look) => (
             <article
               key={look.id}
               data-look-slide
               className="w-[min(82vw,340px)] shrink-0 snap-start sm:w-[360px]"
             >
               <Link
-                href={look.href}
+                href={`/san-pham/${look.slug}`}
                 className="group relative block aspect-[3/4] overflow-hidden rounded-[1.6rem] bg-[var(--surface)] shadow-[var(--shadow-md)] ring-1 ring-[var(--border)]"
               >
                 <Image
-                  src={look.image}
-                  alt={look.title}
+                  src={mediaUrl(look.image)}
+                  alt={look.name}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-[1.05]"
                   sizes="360px"
                 />
-                <div className={cn("absolute inset-0 bg-gradient-to-br opacity-20", ACCENT[look.accent])} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
                 <span className="absolute left-4 top-4 rounded-full bg-black/35 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
-                  {look.tag}
+                  {look.category}
                 </span>
                 <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-                  <p className="font-serif text-2xl font-medium leading-tight">{look.title}</p>
-                  <p className="mt-2 line-clamp-2 text-sm text-white/80">{look.subtitle}</p>
+                  <p className="font-serif text-2xl font-medium leading-tight">{look.name}</p>
+                  <p className="mt-2 line-clamp-2 text-sm text-white/80">{look.description}</p>
                   <span className="mt-4 inline-block text-xs font-bold uppercase tracking-wider text-[var(--accent-warm)]">
-                    Mua set này →
+                    Mua món này →
                   </span>
                 </div>
               </Link>
@@ -168,7 +164,7 @@ export function FeaturedLooksCarousel() {
         </div>
 
         <div className="mt-6 flex justify-center gap-2">
-          {featuredLooks.map((look, i) => (
+          {slides.map((look, i) => (
             <span
               key={look.id}
               className={cn(

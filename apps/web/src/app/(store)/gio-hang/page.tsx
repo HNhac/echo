@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { brandPageTitle } from "@/config/brand";
 import { CartView } from "@/components/cart/cart-view";
+import { metadataForPage } from "@/lib/page-seo";
 
-export const metadata: Metadata = {
-  title: brandPageTitle("Giỏ hàng"),
-  description: "Giỏ hàng — ECHO.",
-};
+export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Promise<Metadata> {
+  return metadataForPage("gio-hang", "Giỏ hàng", "Giỏ hàng — ECHO.");
+}
 
 export default function CartPage() {
   return (

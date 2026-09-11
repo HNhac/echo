@@ -1,16 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { formatVnd, productUnitPrice } from "@/data/catalog";
 import { mediaUrl } from "@/lib/media";
 import { useCart } from "@/components/cart/cart-provider";
-import { useCatalog } from "@/lib/use-catalog";
+import { useProducts } from "@/lib/use-products";
 import { Minus, Plus, Trash2 } from "lucide-react";
 
 export function CartView() {
   const { lines, ready, setQty, remove } = useCart();
-  const catalog = useCatalog();
+  const { products: catalog, loaded } = useProducts();
 
   const resolved = lines
     .map((line) => {
@@ -25,7 +25,7 @@ export function CartView() {
   const ship = subtotal >= 500000 || subtotal === 0 ? 0 : 30000;
   const grand = subtotal + ship;
 
-  if (!ready) {
+  if (!ready || (lines.length > 0 && !loaded)) {
     return (
       <div className="shop-wrap py-20 text-center text-sm text-[var(--ink-muted)]">
         Đang tải giỏ hàng…
@@ -76,7 +76,9 @@ export function CartView() {
                 href={`/san-pham/${product.slug}`}
                 className="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-[var(--surface-2)] sm:h-32 sm:w-28"
               >
-                <Image src={mediaUrl(product.image)} alt={product.name} fill className="object-cover" />
+                {mediaUrl(product.image) ? (
+                  <Image src={mediaUrl(product.image)} alt={product.name} fill className="object-cover" />
+                ) : null}
               </Link>
               <div className="min-w-0 flex-1">
                 <Link

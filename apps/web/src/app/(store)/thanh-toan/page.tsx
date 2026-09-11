@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { brandPageTitle } from "@/config/brand";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { CheckoutForm } from "@/components/cart/checkout-form";
+import { metadataForPage } from "@/lib/page-seo";
 
-export const metadata: Metadata = {
-  title: brandPageTitle("Thanh toán"),
-  description: "Đặt hàng ECHO — COD hoặc chuyển khoản.",
-};
+export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Promise<Metadata> {
+  return metadataForPage("thanh-toan", "Thanh toán", "Đặt hàng ECHO — COD hoặc chuyển khoản.");
+}
 
 export default function CheckoutPage() {
   return (

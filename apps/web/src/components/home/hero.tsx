@@ -2,29 +2,31 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { featuredLooks } from "@/data/featured-looks";
+import type { Product } from "@/data/catalog";
+import { mediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 const AUTO_MS = 5600;
 const PAUSE_MS = 12_000;
 
-export function Hero() {
+export function Hero({ products }: { products: Product[] }) {
+  const slides = products;
   const scrollerRef = useRef<HTMLDivElement>(null);
   const hoverRef = useRef(false);
   const pauseUntil = useRef(0);
   const [active, setActive] = useState(0);
-  const look = featuredLooks[active] ?? featuredLooks[0];
+  const look = slides[active] ?? slides[0];
 
   const step = () => scrollerRef.current?.clientWidth ?? 1;
 
   const update = useCallback(() => {
     const el = scrollerRef.current;
-    if (!el) return;
+    if (!el || !slides.length) return;
     const w = el.clientWidth || 1;
-    setActive(Math.min(Math.max(Math.round(el.scrollLeft / w), 0), featuredLooks.length - 1));
-  }, []);
+    setActive(Math.min(Math.max(Math.round(el.scrollLeft / w), 0), slides.length - 1));
+  }, [slides.length]);
 
   const scrollDir = (dir: -1 | 1) => {
     pauseUntil.current = Date.now() + PAUSE_MS;
@@ -67,18 +69,18 @@ export function Hero() {
       if (hoverRef.current) return;
       if (Date.now() < pauseUntil.current) return;
       const el = scrollerRef.current;
-      if (!el) return;
+      if (!el || slides.length < 2) return;
       const max = el.scrollWidth - el.clientWidth;
       if (el.scrollLeft >= max - 8) el.scrollTo({ left: 0, behavior: "smooth" });
       else el.scrollBy({ left: step(), behavior: "smooth" });
     }, AUTO_MS);
     return () => window.clearInterval(id);
-  }, []);
+  }, [slides.length]);
 
   return (
     <section
       className="relative bg-[var(--ink)]"
-      aria-label="Lookbook nổi bật"
+      aria-label="Sản phẩm nổi bật"
       onMouseEnter={() => {
         hoverRef.current = true;
       }}
@@ -86,38 +88,42 @@ export function Hero() {
         hoverRef.current = false;
       }}
     >
-      <div
-        ref={scrollerRef}
-        className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        tabIndex={0}
-        aria-roledescription="carousel"
-        onKeyDown={(e) => {
-          if (e.key === "ArrowRight") {
-            e.preventDefault();
-            scrollDir(1);
-          }
-          if (e.key === "ArrowLeft") {
-            e.preventDefault();
-            scrollDir(-1);
-          }
-        }}
-      >
-        {featuredLooks.map((item, i) => (
-          <article
-            key={item.id}
-            className="relative h-[min(82vh,700px)] min-h-[480px] w-full min-w-full shrink-0 snap-start"
-          >
-            <Image
-              src={item.image}
-              alt={item.title}
-              fill
-              priority={i === 0}
-              className="object-cover object-center"
-              sizes="100vw"
-            />
-          </article>
-        ))}
-      </div>
+      {slides.length ? (
+        <div
+          ref={scrollerRef}
+          className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          tabIndex={0}
+          aria-roledescription="carousel"
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight") {
+              e.preventDefault();
+              scrollDir(1);
+            }
+            if (e.key === "ArrowLeft") {
+              e.preventDefault();
+              scrollDir(-1);
+            }
+          }}
+        >
+          {slides.map((item, i) => (
+            <article
+              key={item.id}
+              className="relative h-[min(82vh,700px)] min-h-[480px] w-full min-w-full shrink-0 snap-start"
+            >
+              <Image
+                src={mediaUrl(item.image)}
+                alt={item.name}
+                fill
+                priority={i === 0}
+                className="object-cover object-center"
+                sizes="100vw"
+              />
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="h-[min(70vh,560px)] min-h-[420px] bg-[var(--ink)]" />
+      )}
 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--ink)]/70 via-[var(--ink)]/20 to-black/10" />
 
@@ -127,14 +133,14 @@ export function Hero() {
             ECHO · bé gái 1–10 tuổi
           </p>
           <h1 className="mt-5 text-balance font-serif text-4xl font-medium italic leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
-            {look?.title}
+            {look?.name ?? "Thời trang bé gái"}
           </h1>
           <p className="mx-auto mt-4 max-w-md text-pretty text-sm leading-relaxed text-white/85 sm:text-base">
-            {look?.subtitle}
+            {look?.description ?? "Catalog lấy từ CMS — thêm sản phẩm và ảnh upload để hiện trên shop."}
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Link href={look?.href ?? "/san-pham"} className="btn-primary">
-              Mua ngay
+            <Link href={look ? `/san-pham/${look.slug}` : "/san-pham"} className="btn-primary">
+              {look ? "Mua ngay" : "Xem cửa hàng"}
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/san-pham" className="btn-secondary">
@@ -144,38 +150,41 @@ export function Hero() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => scrollDir(-1)}
-        className="absolute left-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/15 text-white backdrop-blur-md transition-colors hover:bg-white/30 sm:flex lg:left-6"
-        aria-label="Slide trước"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        type="button"
-        onClick={() => scrollDir(1)}
-        className="absolute right-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/15 text-white backdrop-blur-md transition-colors hover:bg-white/30 sm:flex lg:right-6"
-        aria-label="Slide sau"
-      >
-        <ChevronRight className="h-5 w-5" />
-      </button>
-
-      <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 sm:bottom-7">
-        {featuredLooks.map((item, i) => (
+      {slides.length > 1 ? (
+        <>
           <button
-            key={item.id}
             type="button"
-            aria-label={`Slide ${i + 1}`}
-            aria-current={i === active}
-            onClick={() => scrollToIndex(i)}
-            className={cn(
-              "h-1.5 rounded-full transition-[width,background-color] duration-300",
-              i === active ? "w-9 bg-white" : "w-2 bg-white/40 hover:bg-white/70",
-            )}
-          />
-        ))}
-      </div>
+            onClick={() => scrollDir(-1)}
+            className="absolute left-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/15 text-white backdrop-blur-md transition-colors hover:bg-white/30 sm:flex lg:left-6"
+            aria-label="Slide trước"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollDir(1)}
+            className="absolute right-3 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/15 text-white backdrop-blur-md transition-colors hover:bg-white/30 sm:flex lg:right-6"
+            aria-label="Slide sau"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+          <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 sm:bottom-7">
+            {slides.map((item, i) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={`Slide ${i + 1}`}
+                aria-current={i === active}
+                onClick={() => scrollToIndex(i)}
+                className={cn(
+                  "h-1.5 rounded-full transition-[width,background-color] duration-300",
+                  i === active ? "w-9 bg-white" : "w-2 bg-white/40 hover:bg-white/70",
+                )}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
     </section>
   );
 }

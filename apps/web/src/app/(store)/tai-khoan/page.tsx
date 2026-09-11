@@ -1,11 +1,12 @@
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import type { Metadata } from "next";
-import { brandPageTitle } from "@/config/brand";
+import { metadataForPage } from "@/lib/page-seo";
 
-export const metadata: Metadata = {
-  title: brandPageTitle("Tài khoản"),
-  description: "Đăng nhập — ECHO.",
-};
+export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Promise<Metadata> {
+  return metadataForPage("tai-khoan", "Tài khoản", "Đăng nhập — ECHO.");
+}
 
 export default function AccountPage() {
   return (

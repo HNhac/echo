@@ -1,9 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { ArrowUpRight } from "lucide-react";
-import { categories } from "@/data/catalog";
+import type { HomeCatalog } from "@echo/shared";
+import { mediaUrl } from "@/lib/media";
 
-export function Categories() {
+export function Categories({ categories }: { categories: HomeCatalog["categories"] }) {
+  if (!categories.length) return null;
+
   return (
     <section id="categories" className="bg-[var(--surface)] py-14 sm:py-20">
       <div className="shop-wrap">
@@ -32,7 +35,7 @@ export function Categories() {
               className="group relative aspect-[3/4] overflow-hidden rounded-[1.6rem] bg-[var(--surface-2)] shadow-[var(--shadow-md)] ring-1 ring-[var(--border)]"
             >
               <Image
-                src={cat.image}
+                src={mediaUrl(cat.image)}
                 alt={cat.name}
                 fill
                 className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.06]"

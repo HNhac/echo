@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import { ContentShell } from "@/components/layout/content-shell";
-import { brandPageTitle } from "@/config/brand";
+import { metadataForPage } from "@/lib/page-seo";
 
-export const metadata: Metadata = {
-  title: brandPageTitle("Vận chuyển & đổi trả"),
-  description: "Chính sách giao hàng và đổi trả demo.",
-};
+export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Promise<Metadata> {
+  return metadataForPage(
+    "van-chuyen-doi-tra",
+    "Vận chuyển & đổi trả",
+    "Chính sách giao hàng và đổi trả.",
+  );
+}
 
 export default function ShippingPage() {
   return (

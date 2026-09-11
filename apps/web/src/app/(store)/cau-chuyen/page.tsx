@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import { ContentShell } from "@/components/layout/content-shell";
 import { MarqueeStrip } from "@/components/home/marquee-strip";
-import { brand, brandPageTitle } from "@/config/brand";
+import { brand } from "@/config/brand";
+import { metadataForPage } from "@/lib/page-seo";
 
-export const metadata: Metadata = {
-  title: brandPageTitle("Câu chuyện"),
-  description: `${brand.name} — thời trang bé gái, vải mềm, size 90–140.`,
-};
+export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Promise<Metadata> {
+  return metadataForPage(
+    "cau-chuyen",
+    "Câu chuyện",
+    `${brand.name} — thời trang bé gái, vải mềm, size 90–140.`,
+  );
+}
 
 export default function StoryPage() {
   return (

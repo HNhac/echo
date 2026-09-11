@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Fraunces, Outfit } from "next/font/google";
 import { brand } from "@/config/brand";
+import { getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
 /** Bitdefender injects `bis_skin_checked` onto the DOM before React hydrates. */
@@ -19,10 +20,17 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: `${brand.name} — ${brand.tagline}`,
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: `${brand.name} — ${brand.tagline}`,
+    template: `%s`,
+  },
   description:
     "Thời trang bé gái 1–10 tuổi — váy đầm, set bộ, áo và phụ kiện. Vải mềm, form dễ mặc, size 90–140.",
   openGraph: {
+    type: "website",
+    locale: "vi_VN",
+    siteName: brand.name,
     title: `${brand.name} — ${brand.tagline}`,
     description: "Váy xòe, set dễ vận động và phụ kiện xinh cho bé gái.",
   },

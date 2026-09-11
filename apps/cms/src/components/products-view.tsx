@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { categories, type Product } from "@echo/shared";
+import { cmsMediaUrl } from "@/lib/media";
 import { IconPlus } from "./icons";
 import { money, slugify } from "@/lib/format";
 
@@ -12,6 +13,9 @@ export type ProductDraft = {
   images: string[];
   description: string;
   featured: boolean;
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string;
 };
 
 type Props = {
@@ -100,9 +104,9 @@ export function ProductsView({
           {visible.map((p) => (
             <article key={p.id} className="product-card">
               <div className="product-card__media">
-                {p.image ? (
+                {cmsMediaUrl(p.image) ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.image} alt="" onError={(e) => e.currentTarget.classList.add("is-broken")} />
+                  <img src={cmsMediaUrl(p.image)} alt="" onError={(e) => e.currentTarget.classList.add("is-broken")} />
                 ) : null}
                 <div className="product-card__fallback" aria-hidden />
                 {p.featured ? <span className="badge badge--pink">Nổi bật</span> : null}
@@ -210,7 +214,7 @@ export function ProductsView({
                     {gallery.map((src, i) => (
                       <div key={`${src}-${i}`} className="thumb">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={src} alt="" onError={(e) => e.currentTarget.classList.add("is-broken")} />
+                        <img src={cmsMediaUrl(src)} alt="" onError={(e) => e.currentTarget.classList.add("is-broken")} />
                         {i === 0 ? <span className="thumb__mark">Bìa</span> : null}
                         <button
                           type="button"
@@ -223,20 +227,9 @@ export function ProductsView({
                       </div>
                     ))}
                   </div>
-                ) : null}
-                <input
-                  value={form.image.startsWith("/uploads/") ? "" : form.image}
-                  onChange={(e) => {
-                    const url = e.target.value.trim();
-                    if (!url) {
-                      setGallery(gallery.filter((src) => src.startsWith("/uploads/")));
-                      return;
-                    }
-                    const uploaded = gallery.filter((src) => src.startsWith("/uploads/"));
-                    setGallery([...uploaded, url]);
-                  }}
-                  placeholder="Hoặc dán URL ảnh…"
-                />
+                ) : (
+                  <p className="muted tiny">Bắt buộc tải ảnh từ máy — không dùng URL mạng.</p>
+                )}
               </div>
               <label className="field">
                 <span>Mô tả</span>
@@ -244,6 +237,31 @@ export function ProductsView({
                   value={form.description}
                   onChange={(e) => onForm({ ...form, description: e.target.value })}
                   rows={4}
+                />
+              </label>
+              <label className="field">
+                <span>SEO title</span>
+                <input
+                  value={form.seoTitle}
+                  onChange={(e) => onForm({ ...form, seoTitle: e.target.value })}
+                  placeholder="Để trống thì dùng tên sản phẩm"
+                />
+              </label>
+              <label className="field">
+                <span>SEO mô tả</span>
+                <textarea
+                  rows={3}
+                  value={form.seoDescription}
+                  onChange={(e) => onForm({ ...form, seoDescription: e.target.value })}
+                  placeholder="Để trống thì dùng mô tả sản phẩm"
+                />
+              </label>
+              <label className="field">
+                <span>SEO từ khóa</span>
+                <input
+                  value={form.seoKeywords}
+                  onChange={(e) => onForm({ ...form, seoKeywords: e.target.value })}
+                  placeholder="váy bé gái, đầm xòe, size 110"
                 />
               </label>
               <label className="check">

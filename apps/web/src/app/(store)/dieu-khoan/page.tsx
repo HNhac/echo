@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { ContentShell } from "@/components/layout/content-shell";
-import { brand, brandPageTitle } from "@/config/brand";
+import { brand } from "@/config/brand";
+import { metadataForPage } from "@/lib/page-seo";
 
-export const metadata: Metadata = {
-  title: brandPageTitle("Điều khoản"),
-};
+export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Promise<Metadata> {
+  return metadataForPage("dieu-khoan", "Điều khoản", "Điều khoản sử dụng website ECHO.");
+}
 
 export default function TermsPage() {
   return (

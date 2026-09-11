@@ -6,6 +6,8 @@ import type { Context } from "hono";
 import {
   formatVnd,
   hasPermission,
+  homeCatalogOf,
+  storeImagePaths,
   normalizeUsername,
   permissionsFor,
   productUnitPrice,
@@ -15,6 +17,7 @@ import {
   type Order,
   type Permission,
   type Product,
+  type SeoPage,
   type StaffLoginInput,
   type StaffRole,
   type StaffUser,
@@ -99,6 +102,14 @@ function ownerCount(users: StaffUser[]) {
   return users.filter((u) => u.role === "owner").length;
 }
 
+app.use("*", async (c, next) => {
+  await next();
+  if (c.req.path.startsWith("/uploads/")) return;
+  if (!c.res.headers.get("Cache-Control")) {
+    c.header("Cache-Control", "private, no-store, max-age=0");
+  }
+});
+
 app.get("/health", (c) => c.json({ ok: true, service: "echo-api" }));
 
 app.get("/uploads/:name", (c) => {
@@ -126,14 +137,58 @@ app.post("/admin/uploads", async (c) => {
 
 app.get("/categories", (c) => c.json(categories));
 
+app.get("/catalog/home", (c) => {
+  const db = loadDb();
+  return c.json(homeCatalogOf(db.products));
+});
+
+app.get("/pages", (c) => {
+  const db = loadDb();
+  return c.json(db.pages);
+});
+
+app.get("/pages/:id", (c) => {
+  const db = loadDb();
+  const page = db.pages.find((p) => p.id === c.req.param("id"));
+  if (!page) return c.json({ error: "Không tìm thấy trang" }, 404);
+  return c.json(page);
+});
+
+app.put("/pages/:id", async (c) => {
+  const auth = gate(c, "products");
+  if (!auth.ok) return auth.res;
+  const db = loadDb();
+  const i = db.pages.findIndex((p) => p.id === c.req.param("id"));
+  if (i < 0) return c.json({ error: "Không tìm thấy trang" }, 404);
+  const body = await c.req.json<Partial<Pick<SeoPage, "title" | "description" | "keywords">>>();
+  db.pages[i] = {
+    ...db.pages[i],
+    title: String(body.title ?? db.pages[i].title).trim() || db.pages[i].title,
+    description: String(body.description ?? db.pages[i].description).trim() || db.pages[i].description,
+    keywords: String(body.keywords ?? db.pages[i].keywords).trim(),
+  };
+  saveDb(db);
+  return c.json(db.pages[i]);
+});
+
 app.get("/products", (c) => {
   const db = loadDb();
-  return c.json(db.products);
+  let list = db.products;
+  const category = c.req.query("category");
+  const featured = c.req.query("featured");
+  const exclude = c.req.query("exclude");
+  const limit = Number(c.req.query("limit") || 0);
+  if (category) list = list.filter((p) => p.categorySlug === category);
+  if (featured === "1") list = list.filter((p) => p.featured);
+  if (exclude) list = list.filter((p) => p.slug !== exclude);
+  if (limit > 0) list = list.slice(0, limit);
+  return c.json(list);
 });
 
 app.get("/products/:slug", (c) => {
   const db = loadDb();
-  const item = db.products.find((p) => p.slug === c.req.param("slug"));
+  const key = c.req.param("slug");
+  const item = db.products.find((p) => p.slug === key) ?? db.products.find((p) => p.id === key);
   if (!item) return c.json({ error: "Không tìm thấy" }, 404);
   return c.json(item);
 });
@@ -261,12 +316,18 @@ app.post("/products", async (c) => {
   const auth = gate(c, "products");
   if (!auth.ok) return auth.res;
   const body = await c.req.json<Product>();
+  const images = storeImagePaths([body.image, ...(body.images ?? [])]);
+  if (!images.length) {
+    return c.json({ error: "Cần tải ảnh sản phẩm lên CMS (không dùng URL ngoài)" }, 400);
+  }
   const db = loadDb();
   if (db.products.some((p) => p.slug === body.slug || p.id === body.id)) {
     return c.json({ error: "Slug hoặc id đã tồn tại" }, 409);
   }
   const product: Product = {
     ...body,
+    image: images[0],
+    images,
     priceFmt: formatVnd(body.price),
   };
   db.products.unshift(product);
@@ -281,10 +342,19 @@ app.put("/products/:id", async (c) => {
   const i = db.products.findIndex((p) => p.id === c.req.param("id"));
   if (i < 0) return c.json({ error: "Không tìm thấy" }, 404);
   const body = await c.req.json<Partial<Product>>();
-  db.products[i] = {
+  const next = {
     ...db.products[i],
     ...body,
     id: db.products[i].id,
+  };
+  const images = storeImagePaths([next.image, ...(next.images ?? [])]);
+  if (!images.length) {
+    return c.json({ error: "Cần tải ảnh sản phẩm lên CMS (không dùng URL ngoài)" }, 400);
+  }
+  db.products[i] = {
+    ...next,
+    image: images[0],
+    images,
     priceFmt: formatVnd(body.price ?? db.products[i].price),
   };
   saveDb(db);

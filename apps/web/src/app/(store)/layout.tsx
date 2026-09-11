@@ -3,6 +3,10 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { StoreProviders } from "@/components/cart/store-providers";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+
 export default function StoreLayout({
   children,
 }: Readonly<{

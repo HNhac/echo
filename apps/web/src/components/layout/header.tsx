@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import { brand } from "@/config/brand";

@@ -2,16 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { formatVnd, productUnitPrice } from "@/data/catalog";
 import { useCart } from "@/components/cart/cart-provider";
-import { useCatalog } from "@/lib/use-catalog";
+import { useProducts } from "@/lib/use-products";
 import { createOrder } from "@/lib/store-api";
 
 export function CheckoutForm() {
   const router = useRouter();
   const { lines, ready, clear } = useCart();
-  const catalog = useCatalog();
+  const { products: catalog, loaded } = useProducts();
   const [pay, setPay] = useState<"cod" | "bank">("cod");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -33,7 +33,7 @@ export function CheckoutForm() {
   const ship = subtotal >= 500000 || subtotal === 0 ? 0 : 30000;
   const grand = subtotal + ship;
 
-  if (!ready) {
+  if (!ready || (lines.length > 0 && !loaded)) {
     return (
       <p className="py-16 text-center text-sm text-[var(--ink-muted)]">Đang tải đơn hàng…</p>
     );

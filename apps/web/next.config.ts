@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname, "../.."),
   },
+  experimental: {
+    staleTimes: {
+      dynamic: 0,
+      static: 30,
+    },
+  },
   async rewrites() {
     return [
       {
@@ -25,11 +31,6 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        pathname: "/**",
-      },
       ...uploadImageRemotePatterns() as Array<{
         protocol: "http" | "https";
         hostname: string;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/data/catalog";
 import { flashSalePriceFmt } from "@/data/catalog";
@@ -29,15 +29,17 @@ export function ProductDetailPanel({ product }: Props) {
     <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
       <div className="space-y-4">
         <div className="relative aspect-[3/4] overflow-hidden rounded-[1.5rem] bg-[var(--surface-2)] shadow-[var(--shadow-lg)]">
-          <Image
-            key={activeImage}
-            src={mediaUrl(activeImage)}
-            alt={product.name}
-            fill
-            priority
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
+          {mediaUrl(activeImage) ? (
+            <Image
+              key={activeImage}
+              src={mediaUrl(activeImage)}
+              alt={product.name}
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+          ) : null}
           {product.flashPct ? (
             <span className="absolute left-4 top-4 rounded-full bg-[var(--accent)] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
               −{product.flashPct}%
@@ -49,7 +51,7 @@ export function ProductDetailPanel({ product }: Props) {
           ) : null}
         </div>
         <div className="flex gap-3 overflow-x-auto pb-1">
-          {product.images.map((src, i) => (
+          {product.images.filter((src) => mediaUrl(src)).map((src, i) => (
             <button
               key={src}
               type="button"

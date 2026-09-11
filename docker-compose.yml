@@ -19,10 +19,12 @@ services:
       dockerfile: deploy/Dockerfile.web
       args:
         API_URL: http://api:4000
-        NEXT_PUBLIC_API_URL: https://api.echothuvui.vn
+        NEXT_PUBLIC_API_URL: /echo-api
+        NEXT_PUBLIC_SITE_URL: https://echothuvui.vn
     environment:
       API_URL: http://api:4000
-      NEXT_PUBLIC_API_URL: https://api.echothuvui.vn
+      NEXT_PUBLIC_API_URL: /echo-api
+      NEXT_PUBLIC_SITE_URL: https://echothuvui.vn
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -35,10 +37,10 @@ services:
       dockerfile: deploy/Dockerfile.cms
       args:
         API_URL: http://api:4000
-        NEXT_PUBLIC_API_URL: https://api.echothuvui.vn
+        NEXT_PUBLIC_API_URL: /echo-api
     environment:
       API_URL: http://api:4000
-      NEXT_PUBLIC_API_URL: https://api.echothuvui.vn
+      NEXT_PUBLIC_API_URL: /echo-api
     ports:
       - "127.0.0.1:3001:3001"
     depends_on:

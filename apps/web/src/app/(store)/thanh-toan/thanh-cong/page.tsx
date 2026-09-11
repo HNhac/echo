@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { brandPageTitle } from "@/config/brand";
 import { Check } from "lucide-react";
 
 export const metadata: Metadata = {
   title: brandPageTitle("Đặt hàng thành công"),
+  robots: { index: false, follow: false },
 };
 
 type Search = { ma?: string; pt?: string };

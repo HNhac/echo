@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { ContentShell } from "@/components/layout/content-shell";
-import { brandPageTitle } from "@/config/brand";
+import { metadataForPage } from "@/lib/page-seo";
 
-export const metadata: Metadata = {
-  title: brandPageTitle("Hướng dẫn size"),
-  description: "Bảng size bé gái 90–140.",
-};
+export const dynamic = "force-dynamic";
+
+export function generateMetadata(): Promise<Metadata> {
+  return metadataForPage("huong-dan-size", "Hướng dẫn size", "Bảng size bé gái 90–140.");
+}
 
 export default function SizeGuidePage() {
   return (

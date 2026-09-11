@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { ShopLink as Link } from "@/components/store/shop-link";
 import { useCallback, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import type { Product } from "@/data/catalog";
-import { flashSaleOf, flashSalePriceFmt, picksRailOf } from "@/data/catalog";
-import { useCatalog } from "@/lib/use-catalog";
+import { flashSalePriceFmt } from "@/data/catalog";
 import { mediaUrl } from "@/lib/media";
 
 const AUTO_MS = 5200;
@@ -32,13 +31,15 @@ function RailCard({
       className="group w-[10.5rem] shrink-0 snap-start sm:w-[13rem]"
     >
       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10">
-        <Image
-          src={mediaUrl(product.image)}
-          alt={product.name}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="208px"
-        />
+        {mediaUrl(product.image) ? (
+          <Image
+            src={mediaUrl(product.image)}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="208px"
+          />
+        ) : null}
         {product.flashPct ? (
           <span className="absolute left-2.5 top-2.5 rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-bold text-white">
             −{product.flashPct}%
@@ -154,10 +155,14 @@ function Rail({
   );
 }
 
-export function FlashPicksRails() {
-  const catalog = useCatalog();
-  const flash = flashSaleOf(catalog);
-  const picks = picksRailOf(catalog);
+export function FlashPicksRails({
+  flash,
+  picks,
+}: {
+  flash: Product[];
+  picks: Product[];
+}) {
+  if (!flash.length && !picks.length) return null;
 
   return (
     <section id="flash" className="relative overflow-hidden bg-[var(--ink)] py-14 text-white sm:py-20">
@@ -181,8 +186,8 @@ export function FlashPicksRails() {
             Xem tất cả →
           </Link>
         </div>
-        <Rail title="Flash sale" products={flash} sale />
-        <Rail title="Đang bán chạy" products={picks} />
+        {flash.length ? <Rail title="Flash sale" products={flash} sale /> : null}
+        {picks.length ? <Rail title="Đang bán chạy" products={picks} /> : null}
       </div>
     </section>
   );
