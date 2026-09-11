@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ECHO — shop quần áo bé gái
 
-## Getting Started
+Monorepo 3 app: cửa hàng (`apps/web`), CMS (`apps/cms`), API (`apps/api`).
 
-First, run the development server:
+| App | Local | Production |
+|---|---|---|
+| Cửa hàng | http://localhost:3000 | https://echothuvui.vn |
+| CMS | http://localhost:3001 | https://cms.echothuvui.vn |
+| API | http://localhost:4000 | https://api.echothuvui.vn |
+
+VPS: `167.104.101.253`
+
+## Local
 
 ```bash
+cp .env.example .env
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Đơn hàng, user và ảnh upload lưu tại `apps/api/data/` (không commit).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+CMS mặc định: `admin` / `echo-admin` — **đổi `ADMIN_KEY` trên VPS**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy
 
-## Learn More
+DNS — 4 bản ghi **A** về `167.104.101.253`:
 
-To learn more about Next.js, take a look at the following resources:
+- `echothuvui.vn`
+- `www.echothuvui.vn`
+- `cms.echothuvui.vn`
+- `api.echothuvui.vn`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Trên VPS:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cp .env.example .env
+nano .env          # đổi ADMIN_KEY
+npm install
+npm run build
+```
 
-## Deploy on Vercel
+Chạy production — chọn **một** cách:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# PM2
+npm i -g pm2
+pm2 start deploy/ecosystem.config.cjs
+pm2 save && pm2 startup
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Docker
+docker compose up -d --build
+```
+
+```bash
+# npm
+npm run start
+```
+
+Nginx + HTTPS:
+
+```bash
+sudo cp deploy/nginx.conf.example /etc/nginx/sites-available/echo
+sudo ln -sf /etc/nginx/sites-available/echo /etc/nginx/sites-enabled/echo
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d echothuvui.vn -d www.echothuvui.vn -d cms.echothuvui.vn -d api.echothuvui.vn
+```
+
+Cổng 3000 / 3001 / 4000 chỉ listen `127.0.0.1` (nginx trên cùng máy mới vào được). Ngoài internet chỉ domain:80/443.
+
+Firewall:
+
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw deny 3000/tcp
+sudo ufw deny 3001/tcp
+sudo ufw deny 4000/tcp
+sudo ufw enable
+```
+
+Sau khi đổi `NEXT_PUBLIC_API_URL` phải `npm run build` lại.
+
+## Ghi chú
+
+- Thanh toán: COD hoặc chuyển khoản (chưa gắn cổng thẻ).
+- Client đọc sản phẩm từ API; nếu API tắt thì dùng catalog seed trong `@echo/shared`.
