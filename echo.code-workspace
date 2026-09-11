@@ -1,0 +1,50 @@
+{
+  "folders": [
+    {
+      "name": "ECHO · Client",
+      "path": "apps/web"
+    },
+    {
+      "name": "ECHO · CMS",
+      "path": "apps/cms"
+    },
+    {
+      "name": "ECHO · API",
+      "path": "apps/api"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.next": true
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Cài packages (root)",
+        "type": "shell",
+        "command": "npm install",
+        "options": {
+          "cwd": "${workspaceFolder:ECHO · API}/../.."
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Chạy cả 3 (Client + CMS + API)",
+        "type": "shell",
+        "command": "npm run dev",
+        "options": {
+          "cwd": "${workspaceFolder:ECHO · API}/../.."
+        },
+        "isBackground": true,
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        }
+      }
+    ]
+  }
+}

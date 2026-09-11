@@ -1,0 +1,25 @@
+FROM node:20-alpine
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY apps/web/package.json apps/web/
+COPY apps/cms/package.json apps/cms/
+COPY apps/api/package.json apps/api/
+COPY packages/shared/package.json packages/shared/
+RUN npm ci
+
+COPY apps ./apps
+COPY packages ./packages
+COPY scripts ./scripts
+
+ARG API_URL=http://127.0.0.1:4000
+ARG NEXT_PUBLIC_API_URL=/echo-api
+ENV API_URL=$API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NODE_ENV=production
+ENV BIND_HOST=0.0.0.0
+
+RUN npm run build -w @echo/cms
+
+EXPOSE 3001
+CMD ["npm", "run", "start", "-w", "@echo/cms"]

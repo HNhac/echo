@@ -1,0 +1,19 @@
+FROM node:20-alpine
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY apps/web/package.json apps/web/
+COPY apps/cms/package.json apps/cms/
+COPY apps/api/package.json apps/api/
+COPY packages/shared/package.json packages/shared/
+RUN npm ci
+
+COPY apps ./apps
+COPY packages ./packages
+COPY scripts ./scripts
+
+ENV HOST=0.0.0.0
+ENV PORT=4000
+EXPOSE 4000
+
+CMD ["npm", "run", "start", "-w", "@echo/api"]

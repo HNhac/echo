@@ -1,26 +1,25 @@
 {
-  "name": "banhang",
-  "version": "0.1.0",
+  "name": "echo",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.9"
+  },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "concurrently -n client,cms,api -c magenta,cyan,green \"npm run dev -w @echo/web\" \"npm run dev -w @echo/cms\" \"npm run dev -w @echo/api\"",
+    "dev:web": "npm run dev -w @echo/web",
+    "dev:cms": "npm run dev -w @echo/cms",
+    "dev:api": "npm run dev -w @echo/api",
+    "build": "npm run build -w @echo/web && npm run build -w @echo/cms",
+    "start": "concurrently -n web,cms,api -c magenta,cyan,green \"npm run start -w @echo/web\" \"npm run start -w @echo/cms\" \"npm run start -w @echo/api\"",
+    "start:web": "npm run start -w @echo/web",
+    "start:cms": "npm run start -w @echo/cms",
+    "start:api": "npm run start -w @echo/api"
   },
   "dependencies": {
-    "next": "16.2.1",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.1",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "concurrently": "^9.2.1"
   }
 }

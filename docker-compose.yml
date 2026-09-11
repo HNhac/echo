@@ -1,0 +1,49 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.api
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4000
+    volumes:
+      - echo-data:/app/apps/api/data
+    ports:
+      - "127.0.0.1:4000:4000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.web
+      args:
+        API_URL: http://api:4000
+        NEXT_PUBLIC_API_URL: https://api.echothuvui.vn
+    environment:
+      API_URL: http://api:4000
+      NEXT_PUBLIC_API_URL: https://api.echothuvui.vn
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  cms:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.cms
+      args:
+        API_URL: http://api:4000
+        NEXT_PUBLIC_API_URL: https://api.echothuvui.vn
+    environment:
+      API_URL: http://api:4000
+      NEXT_PUBLIC_API_URL: https://api.echothuvui.vn
+    ports:
+      - "127.0.0.1:3001:3001"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  echo-data:

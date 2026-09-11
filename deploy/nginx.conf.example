@@ -1,0 +1,114 @@
+# DNS A records → 167.104.101.253
+#   echothuvui.vn
+#   www.echothuvui.vn
+#   cms.echothuvui.vn
+#   api.echothuvui.vn
+#
+# Then: sudo certbot --nginx -d echothuvui.vn -d www.echothuvui.vn -d cms.echothuvui.vn -d api.echothuvui.vn
+
+upstream echo_web {
+  server 127.0.0.1:3000;
+}
+
+upstream echo_cms {
+  server 127.0.0.1:3001;
+}
+
+upstream echo_api {
+  server 127.0.0.1:4000;
+}
+
+# IP / unknown Host → đóng, không serve app
+server {
+  listen 80 default_server;
+  listen [::]:80 default_server;
+  server_name _;
+  return 444;
+}
+
+server {
+  listen 80;
+  listen [::]:80;
+  server_name www.echothuvui.vn;
+  return 301 http://echothuvui.vn$request_uri;
+}
+
+server {
+  listen 80;
+  listen [::]:80;
+  server_name echothuvui.vn;
+  client_max_body_size 12m;
+
+  location /echo-api/ {
+    proxy_pass http://echo_api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /uploads/ {
+    proxy_pass http://echo_api/uploads/;
+    proxy_set_header Host $host;
+    expires 30d;
+    add_header Cache-Control "public";
+  }
+
+  location / {
+    proxy_pass http://echo_web;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+
+server {
+  listen 80;
+  listen [::]:80;
+  server_name cms.echothuvui.vn;
+  client_max_body_size 12m;
+
+  location /echo-api/ {
+    proxy_pass http://echo_api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /uploads/ {
+    proxy_pass http://echo_api/uploads/;
+    proxy_set_header Host $host;
+    expires 30d;
+    add_header Cache-Control "public";
+  }
+
+  location / {
+    proxy_pass http://echo_cms;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+
+server {
+  listen 80;
+  listen [::]:80;
+  server_name api.echothuvui.vn;
+  client_max_body_size 12m;
+
+  location / {
+    proxy_pass http://echo_api;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
