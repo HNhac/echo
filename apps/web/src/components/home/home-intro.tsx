@@ -19,8 +19,8 @@ export function HomeIntro({ cover }: { cover?: Product }) {
             <Link href="/san-pham" className="btn-primary">
               Xem cửa hàng
             </Link>
-            <Link href="/lookbook" className="btn-ghost">
-              Lookbook
+            <Link href="/bo-suu-tap" className="btn-ghost">
+              Bộ sưu tập
             </Link>
           </div>
         </div>

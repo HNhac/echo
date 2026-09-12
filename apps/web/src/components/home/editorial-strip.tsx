@@ -20,17 +20,17 @@ export function EditorialStrip({ cover }: { cover?: Product }) {
       ) : null}
       <div className="shop-in shop-wrap relative mx-auto max-w-2xl text-center">
         <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--accent-warm)]">
-          Lookbook bé gái
+          Bộ sưu tập bé gái
         </p>
         <h2 className="mt-4 text-balance font-serif text-3xl font-medium italic leading-tight tracking-tight sm:text-4xl lg:text-5xl">
           Váy xòe, nơ nhỏ — mặc đi chơi vẫn chạy nhảy được.
         </h2>
         <p className="mt-4 text-sm leading-relaxed text-white/75 sm:text-base">
-          Xem lookbook rồi chọn size 90–140 phù hợp chiều cao bé.
+          Xem bộ sưu tập rồi chọn size 90–140 phù hợp chiều cao bé.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href="/lookbook" className="btn-primary">
-            Xem lookbook
+          <Link href="/bo-suu-tap" className="btn-primary">
+            Xem bộ sưu tập
           </Link>
           <Link href="/san-pham" className="btn-secondary">
             Mua sắm

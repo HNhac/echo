@@ -166,7 +166,7 @@ export function OverviewView({
             <header className="dash-card__head">
               <div>
                 <p className="field-label">SEO trang shop</p>
-                <p className="muted tiny">Title Google cho trang chủ, cửa hàng, lookbook… — khác SEO từng sản phẩm</p>
+                <p className="muted tiny">Title Google cho trang chủ, cửa hàng, bộ sưu tập… — khác SEO từng sản phẩm</p>
               </div>
               <Link href={STUDIO_PATHS.seo} className="text-btn">
                 Chỉnh SEO

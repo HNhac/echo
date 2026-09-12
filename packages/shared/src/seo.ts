@@ -242,15 +242,7 @@ export const SEO_PAGE_SEEDS: SeoPage[] = [
     name: "Bộ sưu tập",
     title: "Bộ sưu tập — ECHO",
     description: "Váy nắng hè cho bé gái — size 90–140.",
-    keywords: "bộ sưu tập bé gái, váy nắng, lookbook",
-  },
-  {
-    id: "lookbook",
-    path: "/lookbook",
-    name: "Lookbook",
-    title: "Lookbook — ECHO",
-    description: "Gợi ý mặc cho bé gái — ECHO.",
-    keywords: "lookbook bé gái, outfit bé gái",
+    keywords: "bộ sưu tập bé gái, váy nắng, outfit bé gái",
   },
   {
     id: "cau-chuyen",

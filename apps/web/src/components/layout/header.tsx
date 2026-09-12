@@ -10,9 +10,8 @@ import { useCart } from "@/components/cart/cart-provider";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { href: "/bo-suu-tap", label: "Bộ sưu tập" },
   { href: "/san-pham", label: "Cửa hàng" },
-  { href: "/lookbook", label: "Lookbook" },
+  { href: "/bo-suu-tap", label: "Bộ sưu tập" },
   { href: "/cau-chuyen", label: "Câu chuyện" },
 ];
 

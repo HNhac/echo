@@ -11,7 +11,6 @@ const cols = [
     links: [
       { href: "/san-pham", label: "Tất cả sản phẩm" },
       { href: "/bo-suu-tap", label: "Bộ sưu tập" },
-      { href: "/lookbook", label: "Lookbook" },
       { href: "/qua-tang", label: "Quà tặng" },
     ],
   },

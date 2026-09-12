@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
       static: 30,
     },
   },
+  async redirects() {
+    return [{ source: "/lookbook", destination: "/bo-suu-tap", permanent: true }];
+  },
   async rewrites() {
     return [
       {
