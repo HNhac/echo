@@ -87,4 +87,4 @@ Sau khi đổi `NEXT_PUBLIC_API_URL` phải `npm run build` lại.
 ## Ghi chú
 
 - Thanh toán: COD hoặc chuyển khoản (chưa gắn cổng thẻ).
-- Client đọc sản phẩm từ API; CMS upload ảnh vào `/uploads`. Không dùng catalog seed hay ảnh Unsplash.
+- Client đọc sản phẩm từ API; CMS upload ảnh vào `/uploads`. API nén WebP (tối đa 1600px + bản 720px), không giữ file gốc. Không dùng catalog seed hay ảnh Unsplash.

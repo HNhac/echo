@@ -1,6 +1,7 @@
 "use client";
 
 import { ShopLink as Link } from "@/components/store/shop-link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import { brand } from "@/config/brand";
@@ -15,7 +16,12 @@ const nav = [
   { href: "/cau-chuyen", label: "Câu chuyện" },
 ];
 
+function navActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function Header() {
+  const pathname = usePathname() || "/";
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { count, ready } = useCart();
@@ -57,40 +63,49 @@ export function Header() {
           className="hidden items-center gap-1 rounded-full border border-[var(--border)] bg-white/70 px-1.5 py-1 lg:flex"
           aria-label="Điều hướng chính"
         >
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-full px-4 py-1.5 text-[0.8rem] font-medium text-[var(--ink-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {nav.map((item) => {
+            const on = navActive(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={on ? "page" : undefined}
+                className={cn(
+                  "cursor-pointer rounded-full px-4 py-1.5 text-[0.8rem] font-medium transition-[background,color,box-shadow]",
+                  on
+                    ? "nav-active"
+                    : "text-[var(--ink-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]",
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="flex shrink-0 items-center gap-0.5">
           <Link
-            href="/san-pham"
-            className="hidden rounded-full p-2.5 text-[var(--ink-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--ink)] sm:inline-flex"
+            href="/san-pham#tim-kiem"
+            className="hidden rounded-full p-2.5 text-[var(--ink-muted)] transition-[background,color,transform] duration-200 hover:-translate-y-px hover:bg-[var(--surface-2)] hover:text-[var(--ink)] sm:inline-flex"
             aria-label="Tìm kiếm — cửa hàng"
           >
             <Search className="h-5 w-5" strokeWidth={1.7} />
           </Link>
           <Link
             href="/tai-khoan"
-            className="hidden rounded-full p-2.5 text-[var(--ink-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--ink)] sm:inline-flex"
+            className="hidden rounded-full p-2.5 text-[var(--ink-muted)] transition-[background,color,transform] duration-200 hover:-translate-y-px hover:bg-[var(--surface-2)] hover:text-[var(--ink)] sm:inline-flex"
             aria-label="Tài khoản"
           >
             <UserRound className="h-5 w-5" strokeWidth={1.7} />
           </Link>
           <Link
             href="/gio-hang"
-            className="relative rounded-full p-2.5 text-[var(--ink-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
+            className="relative rounded-full p-2.5 text-[var(--ink-muted)] transition-[background,color,transform] duration-200 hover:-translate-y-px hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
             aria-label="Giỏ hàng"
           >
             <ShoppingBag className="h-5 w-5" strokeWidth={1.7} />
             {ready && count > 0 ? (
-              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[9px] font-bold text-white">
+              <span className="cart-pop absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[9px] font-bold text-white">
                 {count}
               </span>
             ) : null}
@@ -108,18 +123,25 @@ export function Header() {
       </div>
 
       {open ? (
-        <div className="border-t border-[var(--border)] bg-white lg:hidden">
+        <div className="menu-in border-t border-[var(--border)] bg-white lg:hidden">
           <nav className="shop-wrap flex flex-col gap-1 py-5" aria-label="Menu di động">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="rounded-2xl px-3 py-3 font-serif text-2xl italic text-[var(--ink)] hover:bg-[var(--surface-2)]"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {nav.map((item) => {
+              const on = navActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={on ? "page" : undefined}
+                  className={cn(
+                    "cursor-pointer rounded-2xl px-3 py-3 font-serif text-2xl italic",
+                    on ? "nav-active" : "text-[var(--ink)] hover:bg-[var(--surface-2)]",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
         </div>
       ) : null}

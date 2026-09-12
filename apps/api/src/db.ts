@@ -2,12 +2,21 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  categories,
+  DEFAULT_CATEGORIES,
   mergeSeoPages,
+  normalizeBanners,
+  DEFAULT_SHOP_SETTINGS,
+  DEFAULT_SHOP_STORY,
+  normalizeShopSettings,
+  normalizeShopStory,
   storeImagePaths,
+  type Banner,
+  type Category,
   type Order,
   type Product,
   type SeoPage,
+  type ShopSettings,
+  type ShopStory,
   type StaffUser,
 } from "@echo/shared";
 import { seedOwner } from "./auth.js";
@@ -17,6 +26,10 @@ export type Db = {
   orders: Order[];
   users: StaffUser[];
   pages: SeoPage[];
+  categories: Category[];
+  banners: Banner[];
+  settings: ShopSettings;
+  story: ShopStory;
 };
 
 const dir = dirname(fileURLToPath(import.meta.url));
@@ -29,7 +42,31 @@ function emptyDb(): Db {
     orders: [],
     users: [seedOwner()],
     pages: mergeSeoPages([]),
+    categories: DEFAULT_CATEGORIES.map((c) => ({ ...c })),
+    banners: [],
+    settings: { ...DEFAULT_SHOP_SETTINGS },
+    story: { ...DEFAULT_SHOP_STORY },
   };
+}
+
+function normalizeCategories(raw: unknown): Category[] {
+  if (!Array.isArray(raw)) return DEFAULT_CATEGORIES.map((c) => ({ ...c }));
+  const out: Category[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as Partial<Category>;
+    const slug = String(row.slug ?? "").trim();
+    const name = String(row.name ?? "").trim();
+    if (!slug || !name || seen.has(slug)) continue;
+    seen.add(slug);
+    out.push({
+      slug,
+      name,
+      description: String(row.description ?? "").trim(),
+    });
+  }
+  return out.length ? out : DEFAULT_CATEGORIES.map((c) => ({ ...c }));
 }
 
 function storeProduct(product: Product): Product | null {
@@ -74,6 +111,34 @@ export function loadDb(): Db {
   } else {
     raw.pages = pages;
   }
+  const cats = normalizeCategories(raw.categories);
+  if (JSON.stringify(cats) !== JSON.stringify(raw.categories ?? [])) {
+    raw.categories = cats;
+    dirty = true;
+  } else {
+    raw.categories = cats;
+  }
+  const banners = normalizeBanners(raw.banners);
+  if (JSON.stringify(banners) !== JSON.stringify(raw.banners ?? [])) {
+    raw.banners = banners;
+    dirty = true;
+  } else {
+    raw.banners = banners;
+  }
+  const settings = normalizeShopSettings(raw.settings);
+  if (JSON.stringify(settings) !== JSON.stringify(raw.settings ?? {})) {
+    raw.settings = settings;
+    dirty = true;
+  } else {
+    raw.settings = settings;
+  }
+  const story = normalizeShopStory((raw as { story?: unknown }).story);
+  if (JSON.stringify(story) !== JSON.stringify(raw.story ?? {})) {
+    raw.story = story;
+    dirty = true;
+  } else {
+    raw.story = story;
+  }
   if (dirty) saveDb(raw);
   return raw;
 }
@@ -83,4 +148,4 @@ export function saveDb(db: Db) {
   writeFileSync(dbPath, JSON.stringify(db, null, 2));
 }
 
-export { categories, dataDir };
+export { dataDir };

@@ -56,9 +56,9 @@ export function SeoView({ pages, busy, onSave }: Props) {
 
   return (
     <div className="stack">
-      <p className="muted">
-        Title, mô tả và từ khóa Google cho từng trang shop. Trang sản phẩm chỉnh thêm SEO trong form
-        sản phẩm.
+      <p className="hint">
+        SEO cho trang shop (trang chủ, cửa hàng, lookbook…). SEO từng món nằm trong form sản phẩm — hai
+        chỗ này không trùng.
       </p>
       {note ? <p className="alert">{note}</p> : null}
       <div className="seo-grid">

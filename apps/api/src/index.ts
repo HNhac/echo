@@ -4,28 +4,39 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Context } from "hono";
 import {
+  applySaleFields,
   formatVnd,
   hasPermission,
   homeCatalogOf,
+  normalizeShopSettings,
+  normalizeShopStory,
+  shopBanners,
+  storeBanner,
   storeImagePaths,
   normalizeUsername,
   permissionsFor,
   productUnitPrice,
   toStaffPublic,
+  uniqueCategorySlug,
+  type Banner,
+  type Category,
   type CreateOrderInput,
   type CreateStaffInput,
   type Order,
   type Permission,
   type Product,
   type SeoPage,
+  type ShopSettings,
+  type ShopStory,
   type StaffLoginInput,
   type StaffRole,
   type StaffUser,
   type UpdateStaffInput,
 } from "@echo/shared";
 import { ADMIN_KEY, buildStaff, hashPassword, verifyPassword } from "./auth.js";
-import { categories, loadDb, saveDb } from "./db.js";
-import { readUpload, saveUpload } from "./uploads.js";
+import { loadDb, saveDb } from "./db.js";
+import { openapiSpec, swaggerAllowed, swaggerHtml } from "./openapi.js";
+import { compressLegacyUploads, readUpload, saveUpload } from "./uploads.js";
 
 const PORT = Number(process.env.PORT ?? 4000);
 const HOST = process.env.HOST ?? "0.0.0.0";
@@ -112,8 +123,18 @@ app.use("*", async (c, next) => {
 
 app.get("/health", (c) => c.json({ ok: true, service: "echo-api" }));
 
-app.get("/uploads/:name", (c) => {
-  const file = readUpload(c.req.param("name"));
+app.get("/openapi.json", (c) => {
+  if (!swaggerAllowed(c)) return c.json({ error: "Not found" }, 404);
+  return c.json(openapiSpec);
+});
+
+app.get("/docs", (c) => {
+  if (!swaggerAllowed(c)) return c.json({ error: "Not found" }, 404);
+  return c.html(swaggerHtml());
+});
+
+app.get("/uploads/:name", async (c) => {
+  const file = await readUpload(c.req.param("name"));
   if (!file) return c.json({ error: "Không tìm thấy ảnh" }, 404);
   return c.body(new Uint8Array(file.body), 200, {
     "Content-Type": file.mime,
@@ -135,11 +156,159 @@ app.post("/admin/uploads", async (c) => {
   return c.json(saved, 201);
 });
 
-app.get("/categories", (c) => c.json(categories));
+app.get("/categories", (c) => {
+  const db = loadDb();
+  return c.json(db.categories);
+});
+
+app.post("/categories", async (c) => {
+  const auth = gate(c, "products");
+  if (!auth.ok) return auth.res;
+  const body = await c.req.json<Partial<Category>>();
+  const name = String(body.name ?? "").trim();
+  const description = String(body.description ?? "").trim();
+  if (name.length < 2) return c.json({ error: "Tên nhóm tối thiểu 2 ký tự" }, 400);
+  const db = loadDb();
+  const slug = uniqueCategorySlug(
+    name,
+    db.categories.map((cat) => cat.slug),
+    body.slug,
+  );
+  const category: Category = { slug, name, description };
+  db.categories.push(category);
+  saveDb(db);
+  return c.json(category, 201);
+});
+
+app.put("/categories/:slug", async (c) => {
+  const auth = gate(c, "products");
+  if (!auth.ok) return auth.res;
+  const db = loadDb();
+  const slug = c.req.param("slug");
+  const i = db.categories.findIndex((cat) => cat.slug === slug);
+  if (i < 0) return c.json({ error: "Không tìm thấy nhóm" }, 404);
+  const body = await c.req.json<Partial<Category>>();
+  const name = String(body.name ?? db.categories[i].name).trim();
+  if (name.length < 2) return c.json({ error: "Tên nhóm tối thiểu 2 ký tự" }, 400);
+  const description =
+    body.description != null ? String(body.description).trim() : db.categories[i].description;
+  db.categories[i] = { slug, name, description };
+  for (const product of db.products) {
+    if (product.categorySlug === slug) product.category = name;
+  }
+  saveDb(db);
+  return c.json(db.categories[i]);
+});
+
+app.delete("/categories/:slug", (c) => {
+  const auth = gate(c, "products");
+  if (!auth.ok) return auth.res;
+  const db = loadDb();
+  const slug = c.req.param("slug");
+  const exists = db.categories.some((cat) => cat.slug === slug);
+  if (!exists) return c.json({ error: "Không tìm thấy nhóm" }, 404);
+  const used = db.products.filter((p) => p.categorySlug === slug).length;
+  if (used > 0) {
+    return c.json({ error: `Còn ${used} sản phẩm trong nhóm này` }, 409);
+  }
+  db.categories = db.categories.filter((cat) => cat.slug !== slug);
+  saveDb(db);
+  return c.json({ ok: true });
+});
 
 app.get("/catalog/home", (c) => {
   const db = loadDb();
-  return c.json(homeCatalogOf(db.products));
+  return c.json({
+    ...homeCatalogOf(db.products, db.categories),
+    banners: shopBanners(db.banners, db.settings.bannerEnabled),
+    bannerEnabled: db.settings.bannerEnabled,
+    seasonTheme: db.settings.seasonTheme,
+    seasonFx: db.settings.seasonFx,
+  });
+});
+
+app.get("/settings", (c) => {
+  const db = loadDb();
+  return c.json(db.settings);
+});
+
+app.put("/settings", async (c) => {
+  const auth = gate(c, "products");
+  if (!auth.ok) return auth.res;
+  const body = await c.req.json<Partial<ShopSettings>>();
+  const db = loadDb();
+  db.settings = normalizeShopSettings({
+    ...db.settings,
+    ...body,
+  });
+  saveDb(db);
+  return c.json(db.settings);
+});
+
+app.get("/story", (c) => {
+  const db = loadDb();
+  return c.json(db.story);
+});
+
+app.put("/story", async (c) => {
+  const auth = gate(c, "products");
+  if (!auth.ok) return auth.res;
+  const body = await c.req.json<Partial<ShopStory>>();
+  const db = loadDb();
+  db.story = normalizeShopStory({ ...db.story, ...body });
+  saveDb(db);
+  return c.json(db.story);
+});
+
+app.get("/banners", (c) => {
+  const db = loadDb();
+  const auth = getActor(c);
+  if (auth && hasPermission(auth, "products")) return c.json(db.banners);
+  return c.json(shopBanners(db.banners, db.settings.bannerEnabled));
+});
+
+app.post("/banners", async (c) => {
+  const auth = gate(c, "products");
+  if (!auth.ok) return auth.res;
+  const body = await c.req.json<Partial<Banner>>();
+  const db = loadDb();
+  const sort = db.banners.reduce((max, item) => Math.max(max, item.sort), -1) + 1;
+  const banner = storeBanner({
+    ...body,
+    id: String(Date.now()),
+    sort: Number.isFinite(Number(body.sort)) ? Number(body.sort) : sort,
+  });
+  if (!banner) return c.json({ error: "Cần tải ảnh banner lên CMS" }, 400);
+  db.banners.push(banner);
+  db.banners.sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
+  saveDb(db);
+  return c.json(banner, 201);
+});
+
+app.put("/banners/:id", async (c) => {
+  const auth = gate(c, "products");
+  if (!auth.ok) return auth.res;
+  const db = loadDb();
+  const i = db.banners.findIndex((item) => item.id === c.req.param("id"));
+  if (i < 0) return c.json({ error: "Không tìm thấy" }, 404);
+  const body = await c.req.json<Partial<Banner>>();
+  const banner = storeBanner({ ...db.banners[i], ...body, id: db.banners[i].id });
+  if (!banner) return c.json({ error: "Cần tải ảnh banner lên CMS" }, 400);
+  db.banners[i] = banner;
+  db.banners.sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
+  saveDb(db);
+  return c.json(banner);
+});
+
+app.delete("/banners/:id", (c) => {
+  const auth = gate(c, "products");
+  if (!auth.ok) return auth.res;
+  const db = loadDb();
+  const id = c.req.param("id");
+  if (!db.banners.some((item) => item.id === id)) return c.json({ error: "Không tìm thấy" }, 404);
+  db.banners = db.banners.filter((item) => item.id !== id);
+  saveDb(db);
+  return c.json({ ok: true });
 });
 
 app.get("/pages", (c) => {
@@ -321,14 +490,23 @@ app.post("/products", async (c) => {
     return c.json({ error: "Cần tải ảnh sản phẩm lên CMS (không dùng URL ngoài)" }, 400);
   }
   const db = loadDb();
+  const cat = db.categories.find((item) => item.slug === body.categorySlug);
+  if (!cat) return c.json({ error: "Nhóm không tồn tại" }, 400);
   if (db.products.some((p) => p.slug === body.slug || p.id === body.id)) {
     return c.json({ error: "Slug hoặc id đã tồn tại" }, 409);
   }
   const product: Product = {
     ...body,
+    category: cat.name,
+    categorySlug: cat.slug,
     image: images[0],
     images,
     priceFmt: formatVnd(body.price),
+    ...applySaleFields(body.price, {
+      salePrice: body.salePrice,
+      flashPct: body.flashPct,
+      saleKind: body.saleKind,
+    }),
   };
   db.products.unshift(product);
   saveDb(db);
@@ -347,15 +525,28 @@ app.put("/products/:id", async (c) => {
     ...body,
     id: db.products[i].id,
   };
+  if ("stock" in body && (body.stock === null || body.stock === undefined)) {
+    delete next.stock;
+  }
+  const cat = db.categories.find((item) => item.slug === next.categorySlug);
+  if (!cat) return c.json({ error: "Nhóm không tồn tại" }, 400);
+  next.category = cat.name;
+  next.categorySlug = cat.slug;
   const images = storeImagePaths([next.image, ...(next.images ?? [])]);
   if (!images.length) {
     return c.json({ error: "Cần tải ảnh sản phẩm lên CMS (không dùng URL ngoài)" }, 400);
   }
+  const price = body.price ?? db.products[i].price;
   db.products[i] = {
     ...next,
     image: images[0],
     images,
-    priceFmt: formatVnd(body.price ?? db.products[i].price),
+    priceFmt: formatVnd(price),
+    ...applySaleFields(price, {
+      salePrice: "salePrice" in body ? body.salePrice : next.salePrice,
+      flashPct: "flashPct" in body ? body.flashPct : next.flashPct,
+      saleKind: "saleKind" in body ? body.saleKind : next.saleKind,
+    }),
   };
   saveDb(db);
   return c.json(db.products[i]);
@@ -444,3 +635,6 @@ if (process.env.NODE_ENV === "production" && ADMIN_KEY === "echo-admin") {
 
 console.log(`ECHO API http://${HOST}:${PORT}`);
 serve({ fetch: app.fetch, hostname: HOST, port: PORT });
+void compressLegacyUploads().catch((err) => {
+  console.warn("Không nén được ảnh cũ:", err);
+});

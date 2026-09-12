@@ -7,7 +7,7 @@ export function EmptyCatalog({ title = "Chưa có sản phẩm" }: { title?: str
       <p className="mt-3 text-sm leading-relaxed text-[var(--ink-muted)]">
         Catalog lấy từ CMS. Thêm sản phẩm và tải ảnh lên tại cms.echothuvui.vn.
       </p>
-      <Link href="/lien-he" className="btn-secondary mt-6">
+      <Link href="/lien-he" className="btn-ghost mt-6">
         Liên hệ shop
       </Link>
     </div>

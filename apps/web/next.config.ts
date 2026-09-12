@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       ...uploadImageRemotePatterns() as Array<{
         protocol: "http" | "https";

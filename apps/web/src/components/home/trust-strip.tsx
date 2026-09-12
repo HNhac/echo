@@ -10,10 +10,10 @@ const items = [
 export function TrustStrip() {
   return (
     <section className="bg-white/70">
-      <div className="shop-wrap grid grid-cols-2 gap-6 py-8 sm:grid-cols-4 sm:py-10">
+      <div className="shop-wrap shop-stagger grid grid-cols-2 gap-6 py-8 sm:grid-cols-4 sm:py-10">
         {items.map((item) => (
           <div key={item.title} className="flex flex-col items-center text-center">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--accent)] ring-1 ring-[var(--border)]">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--accent)] ring-1 ring-[var(--border)] transition-transform duration-300 hover:-translate-y-0.5">
               <item.icon className="h-4 w-4" strokeWidth={1.7} />
             </span>
             <p className="mt-3 text-sm font-semibold text-[var(--ink)]">{item.title}</p>

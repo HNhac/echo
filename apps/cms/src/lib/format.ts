@@ -4,6 +4,16 @@ export function money(n: number) {
   return `${new Intl.NumberFormat("vi-VN").format(n)}₫`;
 }
 
+export function digitsOnly(value: string | undefined) {
+  return (value ?? "").replace(/\D/g, "");
+}
+
+export function formatVndInput(value: string | undefined) {
+  const digits = digitsOnly(value);
+  if (!digits) return "";
+  return new Intl.NumberFormat("vi-VN").format(Number(digits));
+}
+
 export function when(iso: string) {
   return new Date(iso).toLocaleString("vi-VN", {
     day: "2-digit",

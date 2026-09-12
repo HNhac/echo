@@ -18,7 +18,7 @@ export function EditorialStrip({ cover }: { cover?: Product }) {
           <div className="absolute inset-0 bg-[var(--ink)]/55" />
         </div>
       ) : null}
-      <div className="shop-wrap relative mx-auto max-w-2xl text-center">
+      <div className="shop-in shop-wrap relative mx-auto max-w-2xl text-center">
         <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--accent-warm)]">
           Lookbook bé gái
         </p>

@@ -8,22 +8,23 @@ type Props = {
 
 export function BrandMark({ className, light }: Props) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-baseline gap-1.5 font-serif italic tracking-[0.22em]",
-        light ? "text-white" : "text-[var(--ink)]",
-        className,
-      )}
-    >
-      {brand.name}
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/brand/logo.webp"
+        alt=""
+        width={36}
+        height={38}
+        className="h-8 w-auto rounded-md"
+        decoding="async"
+      />
       <span
-        aria-hidden
         className={cn(
-          "translate-y-[-2px] text-[0.55em] not-italic tracking-normal",
-          light ? "text-[var(--accent-warm)]" : "text-[var(--accent)]",
+          "inline-flex items-baseline font-serif italic tracking-[0.18em]",
+          light ? "text-white" : "text-[var(--ink)]",
         )}
       >
-        ✦
+        {brand.name}
       </span>
     </span>
   );

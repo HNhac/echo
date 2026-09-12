@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" fill="none">
+  <g stroke="#2f6b4f" stroke-width="2" opacity=".28" stroke-linecap="round">
+    <g transform="translate(80 70)">
+      <path d="M0-16v32M-14-8 14 8M-14 8 14-8"/>
+    </g>
+    <g transform="translate(640 90)">
+      <path d="M0-14v28M-12-7 12 7M-12 7 12-7"/>
+    </g>
+    <g transform="translate(220 250)">
+      <path d="M0-12v24M-10-6 10 6M-10 6 10-6"/>
+    </g>
+    <g transform="translate(500 200)">
+      <path d="M0-16v32M-14-8 14 8M-14 8 14-8"/>
+    </g>
+    <g transform="translate(720 320)">
+      <path d="M0-12v24M-10-6 10 6M-10 6 10-6"/>
+    </g>
+    <g transform="translate(140 500)">
+      <path d="M0-14v28M-12-7 12 7M-12 7 12-7"/>
+    </g>
+    <g transform="translate(560 480)">
+      <path d="M0-16v32M-14-8 14 8M-14 8 14-8"/>
+    </g>
+    <g transform="translate(360 600)">
+      <path d="M0-12v24M-10-6 10 6M-10 6 10-6"/>
+    </g>
+    <g transform="translate(700 640)">
+      <path d="M0-14v28M-12-7 12 7M-12 7 12-7"/>
+    </g>
+    <g transform="translate(90 700)">
+      <path d="M0-12v24M-10-6 10 6M-10 6 10-6"/>
+    </g>
+  </g>
+  <g fill="#c23b3b" opacity=".22">
+    <circle cx="300" cy="80" r="3.5"/>
+    <circle cx="180" cy="160" r="3"/>
+    <circle cx="430" cy="340" r="3.5"/>
+    <circle cx="620" cy="280" r="3"/>
+    <circle cx="250" cy="720" r="3"/>
+  </g>
+</svg>

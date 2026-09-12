@@ -1,4 +1,5 @@
 import { ShopLink as Link } from "@/components/store/shop-link";
+import { Reveal } from "@/components/motion/reveal";
 
 type Breadcrumb = { label: string; href?: string };
 
@@ -32,18 +33,22 @@ export function ContentShell({ title, subtitle, crumbs, children }: Props) {
             ))}
           </nav>
         ) : null}
-        <h1 className="mt-6 font-serif text-3xl font-medium tracking-tight text-[var(--ink)] sm:text-4xl">
-          {title}
-        </h1>
-        {subtitle ? (
-          <p className="mt-3 max-w-xl text-[var(--ink-muted)] leading-relaxed">
-            {subtitle}
-          </p>
-        ) : null}
+        <Reveal>
+          <h1 className="mt-6 font-serif text-3xl font-medium tracking-tight text-[var(--ink)] sm:text-4xl">
+            {title}
+          </h1>
+          {subtitle ? (
+            <p className="mt-3 max-w-xl text-[var(--ink-muted)] leading-relaxed">
+              {subtitle}
+            </p>
+          ) : null}
+        </Reveal>
         <div className="mt-10 h-px w-16 bg-[var(--accent)]" />
-        <div className="mt-8 space-y-6 text-sm leading-relaxed text-[var(--ink-muted)] [&_h2]:mt-10 [&_h2]:font-serif [&_h2]:text-xl [&_h2]:font-medium [&_h2]:text-[var(--ink)] [&_h3]:mt-8 [&_h3]:font-semibold [&_h3]:text-[var(--ink)] [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5 [&_strong]:text-[var(--ink)] [&_a]:text-[var(--accent)] [&_a]:underline-offset-4 hover:[&_a]:underline">
-          {children}
-        </div>
+        <Reveal delay={0.08}>
+          <div className="mt-8 space-y-6 text-sm leading-relaxed text-[var(--ink-muted)] [&_h2]:mt-10 [&_h2]:font-serif [&_h2]:text-xl [&_h2]:font-medium [&_h2]:text-[var(--ink)] [&_h3]:mt-8 [&_h3]:font-semibold [&_h3]:text-[var(--ink)] [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5 [&_strong]:text-[var(--ink)] [&_a]:text-[var(--accent)] [&_a]:underline-offset-4 hover:[&_a]:underline">
+            {children}
+          </div>
+        </Reveal>
       </div>
     </div>
   );

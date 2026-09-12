@@ -66,7 +66,7 @@ export function CartView() {
       <p className="mt-2 text-sm text-[var(--ink-muted)]">{resolved.length} loại sản phẩm</p>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-3">
-        <ul className="space-y-4 lg:col-span-2">
+        <ul className="shop-stagger space-y-4 lg:col-span-2">
           {resolved.map(({ line, product, unit, total }) => (
             <li
               key={`${line.slug}-${line.size}-${line.color}`}
@@ -76,8 +76,8 @@ export function CartView() {
                 href={`/san-pham/${product.slug}`}
                 className="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-[var(--surface-2)] sm:h-32 sm:w-28"
               >
-                {mediaUrl(product.image) ? (
-                  <Image src={mediaUrl(product.image)} alt={product.name} fill className="object-cover" />
+                {mediaUrl(product.image, "sm") ? (
+                  <Image src={mediaUrl(product.image, "sm")} alt={product.name} fill className="object-cover" />
                 ) : null}
               </Link>
               <div className="min-w-0 flex-1">

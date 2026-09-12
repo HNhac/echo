@@ -1,10 +1,11 @@
-import { isUploadPath } from "@echo/shared";
+import { uploadVariant, type MediaSize } from "@echo/shared";
 
-export function cmsMediaUrl(src: string) {
-  if (!isUploadPath(src)) return "";
+export function cmsMediaUrl(src: string, size: MediaSize = "full") {
+  const path = uploadVariant(src, size);
+  if (!path) return "";
   const pub = process.env.NEXT_PUBLIC_API_URL;
   if (pub && /^https?:\/\//i.test(pub)) {
-    return `${pub.replace(/\/$/, "")}${src}`;
+    return `${pub.replace(/\/$/, "")}${path}`;
   }
-  return src;
+  return path;
 }

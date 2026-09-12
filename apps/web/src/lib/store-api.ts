@@ -1,4 +1,5 @@
-import type { CreateOrderInput, HomeCatalog, Order, Product, SeoPage } from "@echo/shared";
+import type { Category, CreateOrderInput, HomeCatalog, Order, Product, SeoPage, ShopSettings, ShopStory } from "@echo/shared";
+import { normalizeShopSettings, normalizeShopStory } from "@echo/shared";
 
 function isHttpUrl(value: string | undefined) {
   return Boolean(value && /^https?:\/\//i.test(value));
@@ -26,6 +27,14 @@ async function getJson<T>(path: string): Promise<T | null> {
   }
 }
 
+export async function fetchShopSettings(): Promise<ShopSettings> {
+  return normalizeShopSettings(await getJson<ShopSettings>("/settings"));
+}
+
+export async function fetchShopStory(): Promise<ShopStory> {
+  return normalizeShopStory(await getJson<ShopStory>("/story"));
+}
+
 export async function fetchHomeCatalog(): Promise<HomeCatalog> {
   const data = await getJson<HomeCatalog>("/catalog/home");
   return (
@@ -35,8 +44,14 @@ export async function fetchHomeCatalog(): Promise<HomeCatalog> {
       picks: [],
       looks: [],
       categories: [],
+      banners: [],
     }
   );
+}
+
+export async function fetchCategories(): Promise<Category[]> {
+  const data = await getJson<Category[]>("/categories");
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchProducts(params?: {

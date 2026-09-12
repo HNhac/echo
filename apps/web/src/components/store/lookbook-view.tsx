@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ShopLink as Link } from "@/components/store/shop-link";
 import type { Product } from "@echo/shared";
 import { EmptyCatalog } from "@/components/store/empty-catalog";
+import { Reveal } from "@/components/motion/reveal";
 import { mediaUrl } from "@/lib/media";
 
 export function LookbookView({ looks }: { looks: Product[] }) {
@@ -27,15 +28,15 @@ export function LookbookView({ looks }: { looks: Product[] }) {
         {looks.length ? (
           <div className="mt-12 columns-1 gap-4 sm:columns-2 lg:columns-3">
             {looks.map((shot, i) => (
+              <Reveal key={shot.id} className="mb-4 break-inside-avoid" delay={Math.min(i, 6) * 0.05}>
               <Link
-                key={shot.id}
                 href={`/san-pham/${shot.slug}`}
-                className={`group relative mb-4 block break-inside-avoid overflow-hidden rounded-[1.35rem] bg-[var(--surface-2)] ${
+                className={`shop-lift group relative block overflow-hidden rounded-[1.35rem] bg-[var(--surface-2)] ${
                   i % 3 === 0 ? "aspect-[3/4]" : "aspect-[4/5]"
                 }`}
               >
                 <Image
-                  src={mediaUrl(shot.image)}
+                  src={mediaUrl(shot.image, "sm")}
                   alt={shot.name}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -46,6 +47,7 @@ export function LookbookView({ looks }: { looks: Product[] }) {
                   {shot.name}
                 </p>
               </Link>
+              </Reveal>
             ))}
           </div>
         ) : (

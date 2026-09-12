@@ -42,6 +42,7 @@ body {
   background-image:
     radial-gradient(900px 520px at 12% -8%, #ffe4ec 0%, transparent 58%),
     radial-gradient(700px 420px at 100% 8%, #fff0e8 0%, transparent 50%);
+  background-repeat: no-repeat;
   color: var(--ink);
   font-family: var(--font-sans);
 }
@@ -55,8 +56,25 @@ body {
   .shop-wrap {
     margin-inline: auto;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1440px;
     padding-inline: 1.25rem;
+  }
+
+  button,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  .nav-active {
+    background-image: linear-gradient(135deg, #f48bb3 0%, var(--accent) 48%, var(--accent-hover) 100%);
+    color: #fff;
+    box-shadow: 0 8px 18px -10px var(--accent-glow);
   }
 
   .btn-primary {
@@ -79,6 +97,10 @@ body {
   .btn-primary:hover {
     transform: translateY(-1px);
     background: var(--accent-hover);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0) scale(0.98);
   }
 
   .btn-secondary {
@@ -176,9 +198,324 @@ body {
   animation-play-state: paused;
 }
 
+@keyframes shop-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shop-pop {
+  0% { transform: scale(0.4); }
+  70% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shop-drop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.shop-in {
+  animation: shop-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.shop-in-late {
+  animation-delay: 0.12s;
+}
+
+.shop-stagger > * {
+  animation: shop-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.shop-stagger > *:nth-child(1) { animation-delay: 0.03s; }
+.shop-stagger > *:nth-child(2) { animation-delay: 0.07s; }
+.shop-stagger > *:nth-child(3) { animation-delay: 0.11s; }
+.shop-stagger > *:nth-child(4) { animation-delay: 0.15s; }
+.shop-stagger > *:nth-child(5) { animation-delay: 0.19s; }
+.shop-stagger > *:nth-child(6) { animation-delay: 0.23s; }
+.shop-stagger > *:nth-child(7) { animation-delay: 0.27s; }
+.shop-stagger > *:nth-child(8) { animation-delay: 0.31s; }
+.shop-stagger > *:nth-child(n + 9) { animation-delay: 0.34s; }
+
+.shop-lift {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+
+.shop-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.cart-pop {
+  animation: shop-pop 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.menu-in {
+  animation: shop-drop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .loom-marquee-track {
+  .loom-marquee-track,
+  .shop-in,
+  .shop-stagger > *,
+  .cart-pop,
+  .menu-in {
     animation: none;
     transform: none;
   }
+
+  .shop-lift:hover {
+    transform: none;
+  }
+}
+
+.product-copy {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.product-copy p {
+  margin: 0 0 0.3em;
+}
+
+.product-copy p:last-child {
+  margin-bottom: 0;
+}
+
+.product-copy h2,
+.product-copy h3,
+.product-copy h4 {
+  margin: 0.55em 0 0.15em;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.product-copy blockquote {
+  margin: 0.7em 0 1em;
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--accent);
+}
+
+.product-copy hr {
+  margin: 1em 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.product-copy u {
+  text-underline-offset: 0.15em;
+}
+
+.product-copy ul,
+.product-copy ol {
+  margin: 0.15em 0 0.4em;
+  padding-left: 1.15rem;
+}
+
+.product-copy li {
+  margin: 0.1em 0;
+}
+
+.product-copy strong,
+.product-copy b {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.product-copy a {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.product-copy img {
+  display: inline;
+  width: auto;
+  height: 1.15em;
+  max-height: 1.25em;
+  vertical-align: -0.18em;
+}
+
+html[data-season] body {
+  background-color: var(--season-bg);
+  background-image:
+    radial-gradient(30rem 22rem at 0% -8%, var(--season-wash-1) 0%, transparent 55%),
+    radial-gradient(22rem 18rem at 100% 0%, var(--season-wash-2) 0%, transparent 48%);
+}
+
+.season-bg {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-repeat: repeat;
+  background-size: 26rem auto;
+  opacity: 0.32;
+}
+
+body:has(.season-bg) main > .bg-\[var\(--surface\)\],
+body:has(.season-bg) main > .bg-\[var\(--surface-2\)\],
+body:has(.season-bg) main section.bg-\[var\(--surface\)\],
+body:has(.season-bg) main section.bg-\[var\(--surface-2\)\],
+body:has(.season-bg) main section.bg-white\/70 {
+  background-color: transparent;
+}
+
+html[data-season="tet"],
+html[data-season="giai-phong"],
+html[data-season="quoc-khanh"] {
+  --accent: #c41e3a;
+  --accent-hover: #a1172e;
+  --accent-warm: #ffe0c2;
+  --accent-glow: rgba(196, 30, 58, 0.28);
+  --border: #f3cfc8;
+  --season-bg: #fff5f2;
+  --season-wash-1: #ffd0c4;
+  --season-wash-2: #ffe7a8;
+  --season-dot: #e8b04a;
+  --season-dot-2: #c41e3a;
+}
+
+html[data-season="trung-thu"],
+html[data-season="phat-dan"] {
+  --accent: #e07a2f;
+  --accent-hover: #c45f1c;
+  --accent-warm: #ffe0b0;
+  --accent-glow: rgba(224, 122, 47, 0.32);
+  --border: #f0d4a4;
+  --season-bg: #fff6e4;
+  --season-wash-1: #ffe08a;
+  --season-wash-2: #ffb45a;
+  --season-dot: #e07a2f;
+  --season-dot-2: #f2c14e;
+}
+
+html[data-season="noel"] {
+  --accent: #c23b3b;
+  --accent-hover: #a32e2e;
+  --accent-warm: #e8f3ea;
+  --accent-glow: rgba(194, 59, 59, 0.28);
+  --border: #d7e4d9;
+  --season-bg: #f3f6f3;
+  --season-wash-1: #f6d5d5;
+  --season-wash-2: #d7eadc;
+  --season-dot: #fff;
+  --season-dot-2: #c23b3b;
+}
+
+html[data-season="phu-nu"],
+html[data-season="phu-nu-vn"],
+html[data-season="valentine"],
+html[data-season="vu-lan"] {
+  --accent: #d44878;
+  --accent-hover: #b53662;
+  --accent-warm: #ffd6e4;
+  --accent-glow: rgba(212, 72, 120, 0.3);
+  --border: #f4d0dc;
+  --season-bg: #fff4f7;
+  --season-wash-1: #ffd0de;
+  --season-wash-2: #f5c4d0;
+  --season-dot: #e0568c;
+  --season-dot-2: #ffb3c7;
+}
+
+html[data-season="thieu-nhi"] {
+  --accent: #5eb3e4;
+  --accent-hover: #3d92c4;
+  --accent-warm: #fff0c8;
+  --accent-glow: rgba(94, 179, 228, 0.3);
+  --border: #d5e8f4;
+  --season-bg: #fff9f4;
+  --season-wash-1: #ffe08a;
+  --season-wash-2: #bfe4f8;
+  --season-dot: #f7c948;
+  --season-dot-2: #5eb3e4;
+}
+
+html[data-season="hung-vuong"] {
+  --accent: #8b4a24;
+  --accent-hover: #6e3818;
+  --accent-warm: #f3e0c4;
+  --accent-glow: rgba(139, 74, 36, 0.28);
+  --border: #e6d2b4;
+  --season-bg: #fff8ef;
+  --season-wash-1: #f0d2a0;
+  --season-wash-2: #e8c48a;
+  --season-dot: #d4a017;
+  --season-dot-2: #8b4a24;
+}
+
+html[data-season="nha-giao"] {
+  --accent: #3d5a40;
+  --accent-hover: #2c4230;
+  --accent-warm: #efe6c8;
+  --accent-glow: rgba(61, 90, 64, 0.28);
+  --border: #d5dcc8;
+  --season-bg: #f6f4ef;
+  --season-wash-1: #e4d7a4;
+  --season-wash-2: #c5d4c4;
+  --season-dot: #c9a227;
+  --season-dot-2: #3d5a40;
+}
+
+html[data-season="doan-ngo"] {
+  --accent: #5d8a3d;
+  --accent-hover: #476b2e;
+  --accent-warm: #eef5d8;
+  --accent-glow: rgba(93, 138, 61, 0.28);
+  --border: #d4e0c4;
+  --season-bg: #f4f8f0;
+  --season-wash-1: #d8ecb0;
+  --season-wash-2: #ffe7a8;
+  --season-dot: #e8b04a;
+  --season-dot-2: #5d8a3d;
+}
+
+.shop-footer {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+  background:
+    radial-gradient(20rem 9rem at 0% 0%, color-mix(in oklab, var(--accent-warm) 70%, transparent), transparent 72%),
+    var(--surface);
+}
+
+.shop-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent) 0%, color-mix(in oklab, var(--accent) 35%, var(--accent-warm)) 42%, transparent 78%);
+}
+
+html[data-season] .shop-footer {
+  background:
+    radial-gradient(20rem 9rem at 0% 0%, var(--season-wash-1), transparent 70%),
+    radial-gradient(16rem 8rem at 100% 110%, var(--season-wash-2), transparent 65%),
+    var(--season-bg);
+}
+
+.shop-footer__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.62rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--accent-warm) 55%, white);
+  color: var(--ink);
 }

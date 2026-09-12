@@ -1,6 +1,7 @@
 import { ShopLink as Link } from "@/components/store/shop-link";
 import type { Product } from "@echo/shared";
 import { ProductCard } from "@/components/product/product-card";
+import { Reveal } from "@/components/motion/reveal";
 import { ArrowUpRight } from "lucide-react";
 
 export function FeaturedProducts({ products }: { products: Product[] }) {
@@ -26,9 +27,11 @@ export function FeaturedProducts({ products }: { products: Product[] }) {
           </Link>
         </div>
 
-        <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {products.map((p, i) => (
+            <Reveal key={p.id} delay={Math.min(i, 7) * 0.05}>
+              <ProductCard product={p} />
+            </Reveal>
           ))}
         </div>
       </div>

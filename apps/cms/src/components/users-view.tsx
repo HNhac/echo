@@ -35,6 +35,29 @@ type Props = {
   busy: boolean;
 };
 
+const ROLE_HINTS: Record<StaffRole, string> = {
+  owner: "Đủ mọi quyền",
+  manager: "Đơn hàng + sản phẩm",
+  ops: "Chỉ đơn hàng",
+  catalog: "Chỉ sản phẩm",
+};
+
+const ROLE_TONE: Record<StaffRole, string> = {
+  owner: "pink",
+  manager: "gold",
+  ops: "sky",
+  catalog: "sage",
+};
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export function UsersView({
   users,
   meId,
@@ -77,125 +100,167 @@ export function UsersView({
           <p>Chưa có tài khoản khớp.</p>
         </div>
       ) : (
-        <div className="user-grid">
-          {visible.map((u) => (
-            <article key={u.id} className="user-card">
-              <div className="user-card__top">
-                <div>
-                  <h3>{u.name}</h3>
-                  <p className="muted tiny">@{u.username}</p>
-                </div>
-                <span className={`badge badge--${u.role === "owner" ? "pink" : u.role === "manager" ? "gold" : u.role === "ops" ? "sky" : "sage"}`}>
-                  {ROLE_LABELS[u.role]}
-                </span>
-              </div>
-              <div className="perms">
-                {u.permissions.map((perm) => (
-                  <span key={perm} className="perm">
-                    {PERMISSION_LABELS[perm]}
-                  </span>
-                ))}
-              </div>
-              <div className="user-card__actions">
-                <button type="button" className="ghost" onClick={() => onEdit(u)}>
-                  Sửa quyền
-                </button>
-                {u.id !== meId ? (
-                  <button type="button" className="text-btn" onClick={() => onDelete(u)}>
-                    Xóa
-                  </button>
-                ) : (
-                  <span className="muted tiny">Bạn</span>
-                )}
-              </div>
-            </article>
-          ))}
+        <div className="table-wrap">
+          <table className="table table--staff">
+            <thead>
+              <tr>
+                <th>Người dùng</th>
+                <th>Vai trò</th>
+                <th>Quyền</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((u) => {
+                const mine = u.id === meId;
+                return (
+                  <tr key={u.id} className={mine ? "is-me" : undefined}>
+                    <td>
+                      <div className="staff-who">
+                        <span className={`user-avatar user-avatar--${ROLE_TONE[u.role]}`} aria-hidden>
+                          {initials(u.name)}
+                        </span>
+                        <div>
+                          <strong>
+                            {u.name}
+                            {mine ? <span className="you-pill">Bạn</span> : null}
+                          </strong>
+                          <div className="muted tiny">@{u.username}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`badge badge--${ROLE_TONE[u.role]}`}>{ROLE_LABELS[u.role]}</span>
+                    </td>
+                    <td>
+                      <div className="perms">
+                        {u.permissions.map((perm) => (
+                          <span key={perm} className="perm">
+                            {PERMISSION_LABELS[perm]}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="table-actions">
+                        <button type="button" className="ghost" onClick={() => onEdit(u)}>
+                          Sửa
+                        </button>
+                        {mine ? null : (
+                          <button type="button" className="text-btn" onClick={() => onDelete(u)}>
+                            Xóa
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
       {open ? (
         <div className="drawer-root">
           <button type="button" className="drawer-scrim" aria-label="Đóng" onClick={onClose} />
-          <aside className="drawer">
+          <aside className="drawer drawer--user" role="dialog" aria-modal="true" aria-labelledby="user-drawer-title">
             <header className="drawer__head">
               <div>
-                <p className="eyebrow">Phân quyền</p>
-                <h2>{editing ? "Sửa tài khoản" : "Tài khoản mới"}</h2>
+                <p className="eyebrow">Nhân sự</p>
+                <h2 id="user-drawer-title">{editing ? "Sửa tài khoản" : "Tài khoản mới"}</h2>
               </div>
               <button type="button" className="ghost" onClick={onClose}>
                 Đóng
               </button>
             </header>
-            <form className="drawer__form" onSubmit={onSave}>
-              <label className="field">
-                <span>Tên hiển thị</span>
-                <input
-                  required
-                  value={form.name}
-                  onChange={(e) => onForm({ ...form, name: e.target.value })}
-                />
-              </label>
-              <label className="field">
-                <span>Tên đăng nhập</span>
-                <input
-                  required
-                  autoComplete="off"
-                  disabled={Boolean(editing)}
-                  value={form.username}
-                  onChange={(e) => onForm({ ...form, username: e.target.value })}
-                />
-              </label>
-              <label className="field">
-                <span>{editing ? "Mật khẩu mới (để trống nếu giữ)" : "Mật khẩu"}</span>
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  required={!editing}
-                  value={form.password}
-                  onChange={(e) => onForm({ ...form, password: e.target.value })}
-                />
-              </label>
-              <label className="field">
-                <span>Vai trò</span>
-                <select
-                  value={form.role}
-                  onChange={(e) => {
-                    const role = e.target.value as StaffRole;
-                    onForm({ ...form, role, permissions: [...ROLE_PRESETS[role]] });
-                  }}
-                >
-                  {STAFF_ROLES.map((role) => (
-                    <option key={role} value={role}>
-                      {ROLE_LABELS[role]}
-                    </option>
+            <form className="drawer__form drawer__form--user" onSubmit={onSave}>
+              <section className="user-pane">
+                <p className="field-label">Thông tin</p>
+                <label className="field">
+                  <span>Tên hiển thị</span>
+                  <input
+                    required
+                    value={form.name}
+                    onChange={(e) => onForm({ ...form, name: e.target.value })}
+                  />
+                </label>
+                <label className="field">
+                  <span>Tên đăng nhập</span>
+                  <input
+                    required
+                    autoComplete="off"
+                    disabled={Boolean(editing)}
+                    value={form.username}
+                    onChange={(e) => onForm({ ...form, username: e.target.value })}
+                  />
+                  {editing ? <em className="field-hint">Không đổi được tên đăng nhập</em> : null}
+                </label>
+                <label className="field">
+                  <span>{editing ? "Mật khẩu mới" : "Mật khẩu"}</span>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    required={!editing}
+                    value={form.password}
+                    onChange={(e) => onForm({ ...form, password: e.target.value })}
+                    placeholder={editing ? "Để trống nếu giữ mật khẩu cũ" : ""}
+                  />
+                </label>
+              </section>
+
+              <section className="user-pane">
+                <p className="field-label">Vai trò & quyền</p>
+                <div className="role-pick" role="radiogroup" aria-label="Vai trò">
+                  {STAFF_ROLES.map((role) => {
+                    const on = form.role === role;
+                    return (
+                      <label key={role} className={on ? "role-opt is-on" : "role-opt"}>
+                        <input
+                          type="radio"
+                          name="staff-role"
+                          value={role}
+                          checked={on}
+                          onChange={() => onForm({ ...form, role, permissions: [...ROLE_PRESETS[role]] })}
+                        />
+                        <strong>{ROLE_LABELS[role]}</strong>
+                        <small>{ROLE_HINTS[role]}</small>
+                      </label>
+                    );
+                  })}
+                </div>
+                <fieldset className="checks">
+                  <legend>Quyền truy cập</legend>
+                  {PERMISSIONS.map((perm) => (
+                    <label key={perm} className="check">
+                      <input
+                        type="checkbox"
+                        checked={ownerLocked || form.permissions.includes(perm)}
+                        disabled={ownerLocked}
+                        onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...form.permissions, perm]
+                            : form.permissions.filter((p) => p !== perm);
+                          onForm({ ...form, permissions: next });
+                        }}
+                      />
+                      {PERMISSION_LABELS[perm]}
+                    </label>
                   ))}
-                </select>
-              </label>
-              <fieldset className="checks">
-                <legend>Quyền</legend>
-                {PERMISSIONS.map((perm) => (
-                  <label key={perm} className="check">
-                    <input
-                      type="checkbox"
-                      checked={ownerLocked || form.permissions.includes(perm)}
-                      disabled={ownerLocked}
-                      onChange={(e) => {
-                        const next = e.target.checked
-                          ? [...form.permissions, perm]
-                          : form.permissions.filter((p) => p !== perm);
-                        onForm({ ...form, permissions: next });
-                      }}
-                    />
-                    {PERMISSION_LABELS[perm]}
-                  </label>
-                ))}
-              </fieldset>
-              <p className="muted tiny">
-                Vận hành chỉ đơn hàng · Catalog chỉ sản phẩm · Quản lý cả hai · Chủ studio đầy đủ, gồm tạo user.
-              </p>
-              <button className="btn" type="submit" disabled={busy}>
-                {busy ? "Đang lưu…" : editing ? "Cập nhật" : "Tạo tài khoản"}
-              </button>
+                  {ownerLocked ? (
+                    <p className="muted tiny">Chủ studio luôn có đủ quyền.</p>
+                  ) : null}
+                </fieldset>
+              </section>
+
+              <div className="drawer__foot">
+                <p className="muted tiny">
+                  {editing ? `Đang sửa @${editing.username}` : "Tài khoản dùng để vào CMS."}
+                </p>
+                <button className="btn" type="submit" disabled={busy}>
+                  {busy ? "Đang lưu…" : editing ? "Cập nhật" : "Tạo tài khoản"}
+                </button>
+              </div>
             </form>
           </aside>
         </div>

@@ -1,4 +1,10 @@
-import { IconSparkle } from "./icons";
+"use client";
+
+import { useState } from "react";
+import { LoginParticles } from "./login-particles";
+import { ThemeToggle } from "./theme-toggle";
+import { BrandLogo } from "./brand-logo";
+import { IconArrow, IconEye, IconEyeOff, IconLock, IconUser } from "./icons";
 
 type Props = {
   username: string;
@@ -19,47 +25,75 @@ export function LoginScreen({
   onPassword,
   onSubmit,
 }: Props) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <main className="login">
-      <section className="login__story">
-        <p className="eyebrow">
-          ECHO <IconSparkle /> Studio
-        </p>
-        <h1>
-          Quản trị
-          <em> bộ sưu tập</em>
-        </h1>
-        <p className="login__lede">
-          Đơn hàng, sản phẩm và lookbook của shop thời trang bé gái — một nơi, trên máy bạn.
-        </p>
-      </section>
-      <section className="login__panel">
-        <form className="login__card" onSubmit={onSubmit}>
-          <p className="eyebrow">Đăng nhập</p>
-          <h2>Vào studio</h2>
-          <p className="muted">Mặc định: admin / echo-admin</p>
-          <label className="field">
-            <span>Tài khoản</span>
-            <input
-              value={username}
-              onChange={(e) => onUsername(e.target.value)}
-              autoComplete="username"
-              required
-            />
+      <div className="login__scene" aria-hidden>
+        <div className="login__wash" />
+        <div className="login__orb login__orb--a" />
+        <div className="login__orb login__orb--b" />
+        <div className="login__orb login__orb--c" />
+        <div className="login__grid" />
+      </div>
+      <LoginParticles />
+      <div className="login__veil" aria-hidden />
+
+      <section className="login__card">
+        <ThemeToggle />
+        <header className="login__brand">
+          <BrandLogo className="login__logo" size={72} />
+          <p className="login__wordmark">
+            ECHO<span>Studio</span>
+          </p>
+          <h1>Đăng nhập</h1>
+        </header>
+        <form className="login__form" onSubmit={onSubmit}>
+          <label className="login__field" htmlFor="cms-username">
+            Tài khoản
+            <span className="login__box">
+              <span className="login__icon">
+                <IconUser />
+              </span>
+              <input
+                id="cms-username"
+                value={username}
+                onChange={(e) => onUsername(e.target.value)}
+                autoComplete="username"
+                placeholder="Nhập tên đăng nhập"
+                required
+              />
+            </span>
           </label>
-          <label className="field">
-            <span>Mật khẩu</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => onPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
+          <label className="login__field" htmlFor="cms-password">
+            Mật khẩu
+            <span className="login__box">
+              <span className="login__icon">
+                <IconLock />
+              </span>
+              <input
+                id="cms-password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => onPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="Nhập mật khẩu"
+                required
+              />
+              <button
+                type="button"
+                className="login__reveal"
+                onClick={() => setShowPassword((open) => !open)}
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+              >
+                {showPassword ? <IconEyeOff /> : <IconEye />}
+              </button>
+            </span>
           </label>
           {error ? <p className="alert">{error}</p> : null}
-          <button className="btn" type="submit" disabled={busy}>
-            {busy ? "Đang vào…" : "Vào quản trị"}
+          <button className="login__submit" type="submit" disabled={busy}>
+            {busy ? "Đang vào…" : "Đăng nhập"}
+            {busy ? null : <IconArrow />}
           </button>
         </form>
       </section>

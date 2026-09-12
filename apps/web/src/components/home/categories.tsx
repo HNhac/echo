@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ShopLink as Link } from "@/components/store/shop-link";
+import { Reveal } from "@/components/motion/reveal";
 import { ArrowUpRight } from "lucide-react";
 import type { HomeCatalog } from "@echo/shared";
 import { mediaUrl } from "@/lib/media";
@@ -29,13 +30,13 @@ export function Categories({ categories }: { categories: HomeCatalog["categories
 
         <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {categories.map((cat, i) => (
+            <Reveal key={cat.slug} delay={Math.min(i, 6) * 0.06}>
             <Link
-              key={cat.slug}
               href={`/san-pham?danh-muc=${cat.slug}`}
-              className="group relative aspect-[3/4] overflow-hidden rounded-[1.6rem] bg-[var(--surface-2)] shadow-[var(--shadow-md)] ring-1 ring-[var(--border)]"
+              className="shop-lift group relative aspect-[3/4] overflow-hidden rounded-[1.6rem] bg-[var(--surface-2)] shadow-[var(--shadow-md)] ring-1 ring-[var(--border)]"
             >
               <Image
-                src={mediaUrl(cat.image)}
+                src={mediaUrl(cat.image, "sm")}
                 alt={cat.name}
                 fill
                 className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.06]"
@@ -54,6 +55,7 @@ export function Categories({ categories }: { categories: HomeCatalog["categories
                 </p>
               </div>
             </Link>
+            </Reveal>
           ))}
         </div>
       </div>

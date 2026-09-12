@@ -1,3 +1,214 @@
+import { slugifyLabel } from "./catalog";
+import { descriptionPlain } from "./html";
+
+/** Google SERP thường cắt title ~50–60 ký tự. */
+export const SEO_TITLE_MIN = 30;
+export const SEO_TITLE_MAX = 60;
+/** Snippet mô tả ổn định khoảng 120–155 ký tự. */
+export const SEO_DESC_MIN = 70;
+export const SEO_DESC_SWEET = 120;
+export const SEO_DESC_MAX = 155;
+
+function tidy(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function fold(value: string) {
+  const text = tidy(value);
+  if (!text) return "";
+  if (text.length > 3 && text === text.toUpperCase() && /[A-ZÀ-Ỹ]/.test(text)) {
+    return text.charAt(0) + text.slice(1).toLowerCase();
+  }
+  return text;
+}
+
+function hasPhrase(hay: string, needle: string) {
+  const a = tidy(hay).toLowerCase();
+  const b = tidy(needle).toLowerCase();
+  return Boolean(a && b && a.includes(b));
+}
+
+function clipWords(value: string, max: number, ellipsis = false) {
+  const text = tidy(value);
+  if (text.length <= max) return text;
+  const cut = text.slice(0, ellipsis ? max - 1 : max);
+  const at = cut.lastIndexOf(" ");
+  const body = (at > Math.floor(max * 0.6) ? cut.slice(0, at) : cut).trim();
+  return ellipsis ? `${body}…` : body;
+}
+
+function uniquePhrases(items: Array<string | undefined>) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of items) {
+    const phrase = tidy(raw ?? "");
+    const key = phrase.toLowerCase();
+    if (phrase.length < 2 || key.length > 40 || seen.has(key)) continue;
+    seen.add(key);
+    out.push(phrase);
+  }
+  return out;
+}
+
+function sizeRange(sizes: string[]) {
+  const nums = sizes.map((s) => Number.parseInt(s, 10)).filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+  if (nums.length >= 2) return `size ${nums[0]}–${nums[nums.length - 1]}`;
+  if (nums.length === 1) return `size ${nums[0]}`;
+  if (sizes.some((s) => /one\s*size/i.test(s))) return "one size";
+  return "";
+}
+
+function firstSentence(plain: string) {
+  const text = tidy(plain.replace(/\n+/g, " "));
+  if (!text) return "";
+  const sentence = text.match(/^[^.!?…]+[.!?…]?/)?.[0] ?? text;
+  return clipWords(sentence.replace(/[.]{2,}/g, "."), 88);
+}
+
+function scoreTitle(title: string) {
+  let score = 0;
+  const len = title.length;
+  if (len >= 50 && len <= 58) score += 12;
+  else if (len >= 40 && len <= 60) score += 8;
+  else if (len >= SEO_TITLE_MIN && len <= SEO_TITLE_MAX) score += 5;
+  if (/bé gái/i.test(title)) score += 3;
+  if (/\| ECHO$/i.test(title)) score += 2;
+  if ((title.match(/\||—|–/g) ?? []).length <= 1) score += 1;
+  const words = title.toLowerCase().split(/[\s|/—–-]+/).filter(Boolean);
+  if (new Set(words).size < words.length) score -= 5;
+  if (title === title.toUpperCase() && title.length > 4) score -= 8;
+  return score;
+}
+
+function buildTitle(name: string, category: string) {
+  if (!name) return "";
+  const extras: string[] = [];
+  const nameWords = new Set(name.toLowerCase().split(/\s+/).filter(Boolean));
+  const catOverlap = category.toLowerCase().split(/\s+/).some((word) => nameWords.has(word));
+  if (category && !hasPhrase(name, category) && !catOverlap) extras.push(category);
+  if (!hasPhrase(name, "bé gái") && !hasPhrase(category, "bé gái")) extras.push("bé gái");
+
+  const cores = uniquePhrases([
+    extras.length ? `${name} ${extras.join(" ")}` : name,
+    `${name} cho bé gái`,
+    `${name} – thời trang bé gái`,
+    extras.includes("bé gái") ? `${name} bé gái` : "",
+    name,
+  ]);
+
+  const candidates = cores.flatMap((core) => (/echo/i.test(core) ? [core] : [`${core} | ECHO`, core]));
+  const fit = uniquePhrases(candidates).filter((title) => title.length <= SEO_TITLE_MAX);
+  if (fit.length) return [...fit].sort((a, b) => scoreTitle(b) - scoreTitle(a))[0] ?? name;
+  return clipWords(name, SEO_TITLE_MAX);
+}
+
+function buildDescription(input: {
+  name: string;
+  category: string;
+  colors: string[];
+  sizes: string[];
+  plain: string;
+}) {
+  const { name, category, colors, sizes, plain } = input;
+  if (!name && !plain) return "";
+
+  const lead = name
+    ? category && !hasPhrase(name, category)
+      ? `${name} thuộc nhóm ${category} cho bé gái`
+      : `${name} cho bé gái`
+    : "";
+  const extra = firstSentence(plain).replace(/[.!?…]+$/g, "");
+  const extraUse = extra && lead && hasPhrase(lead, extra.slice(0, Math.min(18, extra.length))) ? "" : extra;
+  const colorBit = colors.length ? `Màu ${colors.slice(0, 2).join(", ")}` : "";
+  const sizeBit = sizeRange(sizes);
+
+  const parts = [lead, extraUse, colorBit, sizeBit].filter(Boolean).map((part) => part.replace(/[.!?…]+$/g, ""));
+  let desc = parts.join(". ");
+  if (desc && !/[.!?…]$/.test(desc)) desc += ".";
+  if (desc.length < SEO_DESC_SWEET && !/echo/i.test(desc)) {
+    desc += " Xem bảng size và đặt hàng tại ECHO.";
+  }
+  if (desc.length > SEO_DESC_MAX) desc = clipWords(desc, SEO_DESC_MAX, true);
+  return desc;
+}
+
+export function suggestProductSeo(input: {
+  name?: string;
+  category?: string;
+  colors?: string[];
+  sizes?: string[];
+  description?: string;
+}) {
+  const name = fold(input.name ?? "");
+  const category = fold(input.category ?? "");
+  const colors = (input.colors ?? []).map((c) => fold(c)).filter(Boolean);
+  const sizes = (input.sizes ?? []).map((s) => tidy(s)).filter(Boolean);
+  const plain = tidy(descriptionPlain(input.description).replace(/\n+/g, " "));
+
+  const seoTitle = buildTitle(name, category);
+  const seoDescription = buildDescription({ name, category, colors, sizes, plain });
+  const slug = slugifyLabel(name);
+  const keywords = uniquePhrases([
+    name,
+    category,
+    name && name.length <= 24 && !hasPhrase(name, "bé gái") ? `${name} bé gái` : "",
+    category && !hasPhrase(category, "bé gái") ? `${category} bé gái` : "",
+    "thời trang bé gái",
+    ...colors.slice(0, 2),
+    sizeRange(sizes),
+    "ECHO",
+  ]).slice(0, 8);
+
+  return {
+    slug,
+    seoTitle,
+    seoDescription,
+    seoKeywords: keywords.join(", "),
+    keywords,
+  };
+}
+
+export function googleSeoHints(input: { title: string; description: string; slug: string }) {
+  const title = tidy(input.title);
+  const description = tidy(input.description);
+  const slug = tidy(input.slug);
+  const titleWords = title.toLowerCase().split(/[\s|/—–-]+/).filter(Boolean);
+  const stuffed = titleWords.length - new Set(titleWords).size >= 2;
+
+  return [
+    {
+      ok: title.length >= SEO_TITLE_MIN && title.length <= SEO_TITLE_MAX && !stuffed,
+      text:
+        !title
+          ? "Thiếu title — Google sẽ tự lấy tên trang"
+          : title.length > SEO_TITLE_MAX
+            ? `Title ${title.length} ký tự — SERP cắt khoảng ${SEO_TITLE_MAX}`
+            : title.length < SEO_TITLE_MIN
+              ? `Title ${title.length} ký tự — hơi ngắn, Google dễ viết lại`
+              : stuffed
+                ? "Title lặp từ — dễ bị coi nhồi khóa"
+                : `Title ${title.length}/${SEO_TITLE_MAX} — vừa ô Google`,
+    },
+    {
+      ok: description.length >= SEO_DESC_SWEET && description.length <= SEO_DESC_MAX,
+      text:
+        !description
+          ? "Thiếu mô tả — Google tự cắt đoạn trong trang"
+          : description.length > SEO_DESC_MAX
+            ? `Mô tả ${description.length} ký tự — snippet sẽ cắt`
+            : description.length < SEO_DESC_MIN
+              ? `Mô tả ${description.length} ký tự — quá ngắn để chiếm snippet`
+              : description.length < SEO_DESC_SWEET
+                ? `Mô tả ${description.length} ký tự — nên ~${SEO_DESC_SWEET}–${SEO_DESC_MAX}`
+                : `Mô tả ${description.length}/${SEO_DESC_MAX} — đủ 1–2 câu`,
+    },
+    {
+      ok: Boolean(slug) && slug.length <= 60 && !slug.includes("_"),
+      text: slug ? "Slug ngắn, gạch ngang — an toàn cho URL" : "Chưa có slug",
+    },
+  ];
+}
+
 export type SeoPage = {
   id: string;
   path: string;

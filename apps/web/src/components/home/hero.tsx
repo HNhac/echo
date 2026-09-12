@@ -4,15 +4,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ShopLink as Link } from "@/components/store/shop-link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import type { Product } from "@/data/catalog";
+import type { Banner } from "@/data/catalog";
 import { mediaUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 
 const AUTO_MS = 5600;
 const PAUSE_MS = 12_000;
 
-export function Hero({ products }: { products: Product[] }) {
-  const slides = products;
+export function Hero({ banners }: { banners: Banner[] }) {
+  const slides = banners;
+  if (!slides.length) return null;
   const scrollerRef = useRef<HTMLDivElement>(null);
   const hoverRef = useRef(false);
   const pauseUntil = useRef(0);
@@ -80,7 +81,7 @@ export function Hero({ products }: { products: Product[] }) {
   return (
     <section
       className="relative bg-[var(--ink)]"
-      aria-label="Sản phẩm nổi bật"
+      aria-label="Banner trang chủ"
       onMouseEnter={() => {
         hoverRef.current = true;
       }}
@@ -88,59 +89,55 @@ export function Hero({ products }: { products: Product[] }) {
         hoverRef.current = false;
       }}
     >
-      {slides.length ? (
-        <div
-          ref={scrollerRef}
-          className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          tabIndex={0}
-          aria-roledescription="carousel"
-          onKeyDown={(e) => {
-            if (e.key === "ArrowRight") {
-              e.preventDefault();
-              scrollDir(1);
-            }
-            if (e.key === "ArrowLeft") {
-              e.preventDefault();
-              scrollDir(-1);
-            }
-          }}
-        >
-          {slides.map((item, i) => (
-            <article
-              key={item.id}
-              className="relative h-[min(82vh,700px)] min-h-[480px] w-full min-w-full shrink-0 snap-start"
-            >
-              <Image
-                src={mediaUrl(item.image)}
-                alt={item.name}
-                fill
-                priority={i === 0}
-                className="object-cover object-center"
-                sizes="100vw"
-              />
-            </article>
-          ))}
-        </div>
-      ) : (
-        <div className="h-[min(70vh,560px)] min-h-[420px] bg-[var(--ink)]" />
-      )}
+      <div
+        ref={scrollerRef}
+        className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        tabIndex={0}
+        aria-roledescription="carousel"
+        onKeyDown={(e) => {
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            scrollDir(1);
+          }
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            scrollDir(-1);
+          }
+        }}
+      >
+        {slides.map((item, i) => (
+          <article
+            key={item.id}
+            className="relative h-[min(82vh,700px)] min-h-[480px] w-full min-w-full shrink-0 snap-start"
+          >
+            <Image
+              src={mediaUrl(item.image)}
+              alt={item.title}
+              fill
+              priority={i === 0}
+              className="object-cover object-center"
+              sizes="100vw"
+            />
+          </article>
+        ))}
+      </div>
 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--ink)]/70 via-[var(--ink)]/20 to-black/10" />
 
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 py-16 text-center">
-        <div className="pointer-events-auto mx-auto w-full max-w-xl rounded-[2rem] border border-white/30 bg-white/12 px-6 py-8 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:px-10 sm:py-11">
+        <div className="shop-in pointer-events-auto mx-auto w-full max-w-xl rounded-[2rem] border border-white/30 bg-white/12 px-6 py-8 shadow-[var(--shadow-lg)] backdrop-blur-xl sm:px-10 sm:py-11">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-warm)]">
             ECHO · bé gái 1–10 tuổi
           </p>
           <h1 className="mt-5 text-balance font-serif text-4xl font-medium italic leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
-            {look?.name ?? "Thời trang bé gái"}
+            {look?.title ?? "Thời trang bé gái"}
           </h1>
           <p className="mx-auto mt-4 max-w-md text-pretty text-sm leading-relaxed text-white/85 sm:text-base">
-            {look?.description ?? "Catalog lấy từ CMS — thêm sản phẩm và ảnh upload để hiện trên shop."}
+            {look?.subtitle || "Váy đầm, set bộ, áo và phụ kiện bé gái — size 90–140."}
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Link href={look ? `/san-pham/${look.slug}` : "/san-pham"} className="btn-primary">
-              {look ? "Mua ngay" : "Xem cửa hàng"}
+            <Link href={look?.href || "/san-pham"} className="btn-primary">
+              {look ? "Xem ngay" : "Xem cửa hàng"}
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/san-pham" className="btn-secondary">
