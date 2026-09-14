@@ -8,6 +8,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { fetchProductBySlug, fetchProducts } from "@/lib/store-api";
 import { mediaUrl } from "@/lib/media";
 import { descriptionPlain } from "@/data/catalog";
+import { suggestProductSeo } from "@echo/shared";
 import { absoluteUrl, getSiteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +19,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await fetchProductBySlug(slug);
   if (!product) return { title: brandPageTitle("Không tìm thấy") };
-  const title = product.seoTitle?.trim() || brandPageTitle(product.name);
-  const description = product.seoDescription?.trim() || descriptionPlain(product.description);
-  const keywords = product.seoKeywords
-    ?.split(",")
+  const suggested = suggestProductSeo({
+    name: product.name,
+    category: product.category,
+    colors: product.colors,
+    sizes: product.sizes,
+    description: product.description,
+  });
+  const title = product.seoTitle?.trim() || suggested.seoTitle || brandPageTitle(product.name);
+  const description =
+    product.seoDescription?.trim() || suggested.seoDescription || descriptionPlain(product.description);
+  const keywords = (product.seoKeywords || suggested.seoKeywords)
+    .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
   const url = `${getSiteUrl()}/san-pham/${product.slug}`;

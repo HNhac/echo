@@ -62,17 +62,20 @@ function ProductBones() {
 
 function SeoBones() {
   return (
-    <div className="stack">
+    <div className="seo-studio">
       <Bone className="sk--hint" />
-      <div className="seo-grid">
-        {Array.from({ length: 3 }, (_, i) => (
-          <article key={i} className="seo-card">
-            <Bone className="sk--line sk--w-40" />
-            <Bone className="sk--field" />
-            <Bone className="sk--area" />
-            <Bone className="sk--field" />
-          </article>
-        ))}
+      <div className="seo-studio__body">
+        <div className="seo-studio__nav">
+          {Array.from({ length: 6 }, (_, i) => (
+            <Bone key={i} className="sk--line" />
+          ))}
+        </div>
+        <article className="seo-studio__edit">
+          <Bone className="sk--line sk--w-40" />
+          <Bone className="sk--field" />
+          <Bone className="sk--area" />
+          <Bone className="sk--field" />
+        </article>
       </div>
     </div>
   );
@@ -134,6 +137,16 @@ export function TabSkeleton({ kind }: { kind: Tab }) {
       {kind === "orders" ? <OrdersBones /> : null}
       {kind === "products" || kind === "banners" ? <ProductBones /> : null}
       {kind === "seo" ? <SeoBones /> : null}
+      {kind === "host" ? (
+        <div className="host-grid">
+          {Array.from({ length: 6 }, (_, i) => (
+            <article key={i} className="host-card">
+              <Bone className="sk--label" />
+              <Bone className="sk--num" />
+            </article>
+          ))}
+        </div>
+      ) : null}
       {kind === "users" ? <UserBones /> : null}
     </div>
   );

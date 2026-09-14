@@ -806,7 +806,7 @@ export function ProductsView({
                 <p className="field-label">Xem trên Google</p>
                 <div className="serp">
                   <p className="serp__url">
-                    echo.vn › san-pham › {form.slug.trim() || seoPreview.slug || "slug"}
+                    {shopProductUrl(form.slug.trim() || seoPreview.slug || "slug").replace(/^https?:\/\//, "").replace(/\//g, " › ")}
                   </p>
                   <p className="serp__title">
                     {form.seoTitle.trim() || seoPreview.seoTitle || "Tiêu đề sẽ hiện ở đây"}

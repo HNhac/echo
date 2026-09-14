@@ -22,10 +22,21 @@ export default async function Home() {
       <JsonLd
         data={{
           "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "ECHO",
-          url: getSiteUrl(),
-          description: "Thời trang bé gái 1–10 tuổi — váy đầm, set bộ, áo và phụ kiện.",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "ECHO",
+              url: getSiteUrl(),
+              description: "Thời trang bé gái 1–10 tuổi — váy đầm, set bộ, áo và phụ kiện.",
+            },
+            {
+              "@type": "WebSite",
+              name: "ECHO",
+              url: getSiteUrl(),
+              inLanguage: "vi-VN",
+              publisher: { "@type": "Organization", name: "ECHO", url: getSiteUrl() },
+            },
+          ],
         }}
       />
       <HomeView catalog={catalog} />

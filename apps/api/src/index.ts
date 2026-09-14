@@ -37,6 +37,8 @@ import { ADMIN_KEY, buildStaff, hashPassword, verifyPassword } from "./auth.js";
 import { loadDb, saveDb } from "./db.js";
 import { openapiSpec, swaggerAllowed, swaggerHtml } from "./openapi.js";
 import { compressLegacyUploads, readUpload, saveUpload } from "./uploads.js";
+import { readHostStats } from "./host-stats.js";
+import { clientIp, recordVisit } from "./visits.js";
 
 const PORT = Number(process.env.PORT ?? 4000);
 const HOST = process.env.HOST ?? "0.0.0.0";
@@ -122,6 +124,14 @@ app.use("*", async (c, next) => {
 });
 
 app.get("/health", (c) => c.json({ ok: true, service: "echo-api" }));
+
+app.post("/visit", async (c) => {
+  recordVisit({
+    ip: clientIp(c.req.raw.headers),
+    agent: c.req.header("user-agent") ?? "",
+  });
+  return c.json({ ok: true });
+});
 
 app.get("/openapi.json", (c) => {
   if (!swaggerAllowed(c)) return c.json({ error: "Not found" }, 404);
@@ -387,6 +397,13 @@ app.get("/admin/me", (c) => {
   const auth = gate(c);
   if (!auth.ok) return auth.res;
   return c.json(toStaffPublic(auth.user));
+});
+
+app.get("/admin/host-stats", async (c) => {
+  const auth = gate(c);
+  if (!auth.ok) return auth.res;
+  if (auth.user.role !== "owner") return c.json({ error: "Chỉ chủ studio xem máy chủ" }, 403);
+  return c.json(await readHostStats());
 });
 
 app.get("/admin/users", (c) => {

@@ -5,6 +5,7 @@ import { SeasonTheme } from "@/components/layout/season-theme";
 import { StoreProviders } from "@/components/cart/store-providers";
 import { activeShopNotices } from "@echo/shared";
 import { fetchShopSettings } from "@/lib/store-api";
+import { VisitPulse } from "@/components/layout/visit-pulse";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -32,6 +33,7 @@ export default async function StoreLayout({
         overlays={settings.seasonOverlays}
         shared={settings.seasonOverlayShared}
       />
+      <VisitPulse />
       <div id="top" />
       <AnnouncementBar items={settings.announcementEnabled ? notices : []} />
       <Header />

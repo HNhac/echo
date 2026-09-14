@@ -8,6 +8,7 @@ export const STUDIO_PATHS = {
   settings: "/cai-dat",
   story: "/cau-chuyen",
   seo: "/seo",
+  host: "/may-chu",
   users: "/tai-khoan",
 } as const;
 
@@ -21,6 +22,7 @@ export const STUDIO_TITLES: Record<Tab, { eye: string; title: string }> = {
   settings: { eye: "Shop", title: "Cài đặt" },
   story: { eye: "Shop", title: "Câu chuyện" },
   seo: { eye: "Google", title: "SEO trang" },
+  host: { eye: "VPS", title: "Máy chủ" },
   users: { eye: "Studio", title: "Tài khoản" },
 };
 
@@ -48,6 +50,7 @@ export function tabFromPath(pathname: string): Tab {
 
 export function tabAllowed(user: StaffPublic, tab: Tab) {
   if (tab === "overview") return true;
+  if (tab === "host") return user.role === "owner";
   if (tab === "seo" || tab === "banners" || tab === "settings" || tab === "story") {
     return hasPermission(user, "products");
   }

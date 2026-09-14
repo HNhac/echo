@@ -22,6 +22,8 @@ build
 
 # local API store
 apps/api/data/
+var/*.json
+!var/.gitkeep
 
 # misc
 .DS_Store

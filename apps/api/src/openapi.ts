@@ -234,6 +234,15 @@ export const openapiSpec = {
         responses: { "200": { description: "StaffPublic" } },
       },
     },
+    "/admin/host-stats": {
+      get: {
+        tags: ["CMS"],
+        summary: "RAM, disk, Docker, lượt truy cập VPS",
+        security: adminSecurity(),
+        parameters: [adminKey],
+        responses: { "200": { description: "HostStats" }, "403": { description: "Không phải chủ studio" } },
+      },
+    },
     "/admin/users": {
       get: {
         tags: ["CMS"],

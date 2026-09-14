@@ -32,13 +32,14 @@ import { BannersView, type BannerDraft } from "@/components/banners-view";
 import { ProductsView, type ProductDraft } from "@/components/products-view";
 import { UsersView, type UserDraft } from "@/components/users-view";
 import { SeoView } from "@/components/seo-view";
+import { HostStatsView } from "@/components/host-stats-view";
 import { BrandLogo } from "@/components/brand-logo";
 import { StudioSkeleton, TabSkeleton } from "@/components/skeletons";
 import { SettingsView } from "@/components/settings-view";
 import { StoryView } from "@/components/story-view";
 import { StudioBar } from "@/components/studio-bar";
 import { ToastStack, useToasts } from "@/components/toast";
-import { IconBag, IconBanner, IconHanger, IconHome, IconPeople, IconSeo, IconSettings, IconStory } from "@/components/icons";
+import { IconBag, IconBanner, IconHanger, IconHome, IconPeople, IconSeo, IconServer, IconSettings, IconStory } from "@/components/icons";
 import { API, KEY_STORAGE, adminHeaders } from "@/lib/api";
 import { digitsOnly, money, slugify } from "@/lib/format";
 import {
@@ -126,6 +127,7 @@ const emptyReady = (): Record<Tab, boolean> => ({
   settings: false,
   story: false,
   seo: false,
+  host: false,
   users: false,
 });
 
@@ -342,6 +344,8 @@ export function StudioApp() {
             setPages(data);
             setReady((cur) => ({ ...cur, seo: true }));
           } else if (first) setError("Không đọc được SEO trang.");
+        } else if (tab === "host") {
+          setReady((cur) => ({ ...cur, host: true }));
         } else if (tab === "users") {
           const res = await fetch(`${API}/admin/users`, {
             cache: "no-store",
@@ -1089,6 +1093,11 @@ export function StudioApp() {
               <IconSeo /> SEO trang
             </Link>
           ) : null}
+          {me?.role === "owner" ? (
+            <Link href={STUDIO_PATHS.host} className={tab === "host" ? "is-on" : ""}>
+              <IconServer /> Máy chủ
+            </Link>
+          ) : null}
           {can("users") ? (
             <Link href={STUDIO_PATHS.users} className={tab === "users" ? "is-on" : ""}>
               <IconPeople /> Tài khoản
@@ -1222,6 +1231,13 @@ export function StudioApp() {
             <SeoView pages={pages} busy={busy} onSave={saveSeoPage} />
           ) : (
             <TabSkeleton kind="seo" />
+          )
+        ) : null}
+        {tab === "host" && me?.role === "owner" ? (
+          ready.host ? (
+            <HostStatsView adminKey={key} />
+          ) : (
+            <TabSkeleton kind="host" />
           )
         ) : null}
         {tab === "users" && can("users") ? (

@@ -7,8 +7,10 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 4000
+      HOST_STATS_FILE: /app/var/host-stats.json
     volumes:
       - echo-data:/app/apps/api/data
+      - ./var:/app/var:ro
     ports:
       - "127.0.0.1:4000:4000"
     restart: unless-stopped

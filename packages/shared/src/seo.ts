@@ -218,127 +218,145 @@ export type SeoPage = {
   keywords: string;
 };
 
-export const SEO_PAGE_SEEDS: SeoPage[] = [
-  {
-    id: "home",
-    path: "/",
-    name: "Trang chủ",
-    title: "ECHO — Thời trang bé gái",
+const PAGE_SEO_COPY: Record<string, Pick<SeoPage, "title" | "description" | "keywords">> = {
+  home: {
+    title: "Thời trang bé gái 1–10 tuổi | ECHO",
     description:
-      "Thời trang bé gái 1–10 tuổi — váy đầm, set bộ, áo và phụ kiện. Vải mềm, form dễ mặc, size 90–140.",
-    keywords: "thời trang bé gái, váy bé gái, set bộ bé gái, ECHO",
+      "Shop váy đầm, set bộ, áo và phụ kiện cho bé gái 1–10 tuổi. Vải mềm, form dễ mặc, size 90–140. Đặt hàng tại echothuvui.vn.",
+    keywords: "thời trang bé gái, váy bé gái, shop bé gái, ECHO, echothuvui",
   },
-  {
-    id: "san-pham",
-    path: "/san-pham",
-    name: "Cửa hàng",
-    title: "Cửa hàng — ECHO",
-    description: "Váy đầm, set bộ, áo và phụ kiện bé gái — size 90–140.",
-    keywords: "mua váy bé gái, shop bé gái, size 90 140",
+  "san-pham": {
+    title: "Cửa hàng váy đầm bé gái | ECHO",
+    description:
+      "Xem váy đầm, set bộ, áo và phụ kiện bé gái đang bán tại ECHO. Lọc danh mục, chọn size 90–140, đặt hàng COD trên echothuvui.vn.",
+    keywords: "mua váy bé gái, shop bé gái, size 90 140, cửa hàng ECHO",
   },
-  {
-    id: "bo-suu-tap",
-    path: "/bo-suu-tap",
-    name: "Bộ sưu tập",
-    title: "Bộ sưu tập — ECHO",
-    description: "Váy nắng hè cho bé gái — size 90–140.",
-    keywords: "bộ sưu tập bé gái, váy nắng, outfit bé gái",
+  "bo-suu-tap": {
+    title: "Bộ sưu tập váy bé gái 2026 | ECHO",
+    description:
+      "Bộ sưu tập váy nắng, đầm tiệc và set dễ vận động cho bé gái. Cotton mềm, size 90–140, mặc đi chơi vẫn chạy nhảy được.",
+    keywords: "bộ sưu tập bé gái, váy nắng bé gái, outfit bé gái, ECHO",
   },
-  {
-    id: "cau-chuyen",
-    path: "/cau-chuyen",
-    name: "Câu chuyện",
-    title: "Câu chuyện — ECHO",
-    description: "Câu chuyện thương hiệu ECHO.",
-    keywords: "thương hiệu ECHO, thời trang trẻ em",
+  "cau-chuyen": {
+    title: "Câu chuyện thương hiệu ECHO | bé gái",
+    description:
+      "ECHO làm thời trang bé gái 1–10 tuổi: vải mềm, form dễ mặc, size thật. Đọc câu chuyện studio và cách chọn đồ cho bé.",
+    keywords: "thương hiệu ECHO, thời trang trẻ em, câu chuyện ECHO",
   },
-  {
-    id: "lien-he",
-    path: "/lien-he",
-    name: "Liên hệ",
-    title: "Liên hệ — ECHO",
-    description: "Liên hệ ECHO.",
-    keywords: "liên hệ ECHO, hotline shop bé gái",
+  "lien-he": {
+    title: "Liên hệ shop thời trang bé gái | ECHO",
+    description:
+      "Liên hệ ECHO để hỏi size, đổi trả hoặc đặt váy bé gái. Shop thời trang bé 1–10 tuổi, size 90–140, giao toàn quốc.",
+    keywords: "liên hệ ECHO, hotline shop bé gái, echothuvui",
   },
-  {
-    id: "gio-hang",
-    path: "/gio-hang",
-    name: "Giỏ hàng",
-    title: "Giỏ hàng — ECHO",
-    description: "Giỏ hàng ECHO.",
-    keywords: "giỏ hàng",
+  "huong-dan-size": {
+    title: "Bảng size váy bé gái 90–140 | ECHO",
+    description:
+      "Chọn size 90–140 theo chiều cao bé trước khi đặt váy đầm ECHO. Bảng size thật, đổi size trong 7 ngày nếu còn tem.",
+    keywords: "size váy bé gái, bảng size 90 140, hướng dẫn size ECHO",
   },
-  {
-    id: "thanh-toan",
-    path: "/thanh-toan",
-    name: "Thanh toán",
-    title: "Thanh toán — ECHO",
-    description: "Thanh toán đơn hàng ECHO.",
-    keywords: "thanh toán, COD",
+  "van-chuyen-doi-tra": {
+    title: "Vận chuyển và đổi trả | ECHO",
+    description:
+      "ECHO giao toàn quốc, freeship đơn từ 500.000₫. Đổi size trong 7 ngày khi còn tem mác. Xem chính sách vận chuyển và đổi trả.",
+    keywords: "đổi trả ECHO, freeship bé gái, vận chuyển shop ECHO",
   },
-  {
-    id: "huong-dan-size",
-    path: "/huong-dan-size",
-    name: "Hướng dẫn size",
-    title: "Hướng dẫn size — ECHO",
-    description: "Bảng size 90–140 cho bé gái.",
-    keywords: "size váy bé gái, bảng size 90 140",
+  "bao-mat": {
+    title: "Chính sách bảo mật thông tin | ECHO",
+    description:
+      "ECHO chỉ dùng thông tin đơn hàng để giao váy bé gái. Đọc chính sách bảo mật, quyền riêng tư trên echothuvui.vn.",
+    keywords: "bảo mật ECHO, quyền riêng tư, chính sách shop",
   },
-  {
-    id: "van-chuyen-doi-tra",
-    path: "/van-chuyen-doi-tra",
-    name: "Vận chuyển & đổi trả",
-    title: "Vận chuyển & đổi trả — ECHO",
-    description: "Chính sách vận chuyển và đổi trả.",
-    keywords: "đổi trả, freeship",
+  "dieu-khoan": {
+    title: "Điều khoản mua hàng tại shop ECHO",
+    description:
+      "Điều khoản mua váy đầm, set bộ bé gái trên echothuvui.vn — đặt hàng, thanh toán COD, đổi size và quyền của khách.",
+    keywords: "điều khoản ECHO, điều khoản mua hàng",
   },
-  {
-    id: "bao-mat",
-    path: "/bao-mat",
-    name: "Bảo mật",
-    title: "Bảo mật — ECHO",
-    description: "Chính sách bảo mật thông tin.",
-    keywords: "bảo mật, quyền riêng tư",
+  "qua-tang": {
+    title: "Quà tặng váy đầm bé gái | ECHO",
+    description:
+      "Gợi ý quà sinh nhật, thôi nôi và ngày lễ: váy đầm, set bộ và phụ kiện bé gái size 90–140 tại ECHO.",
+    keywords: "quà tặng bé gái, váy sinh nhật bé gái, quà ECHO",
   },
-  {
-    id: "dieu-khoan",
-    path: "/dieu-khoan",
-    name: "Điều khoản",
-    title: "Điều khoản — ECHO",
-    description: "Điều khoản sử dụng website.",
-    keywords: "điều khoản",
+  "gio-hang": {
+    title: "Giỏ hàng | ECHO",
+    description: "Giỏ hàng ECHO — kiểm tra váy đầm và set bộ trước khi thanh toán.",
+    keywords: "giỏ hàng ECHO",
   },
-  {
-    id: "qua-tang",
-    path: "/qua-tang",
-    name: "Quà tặng",
-    title: "Quà tặng — ECHO",
-    description: "Gợi ý quà tặng cho bé gái.",
-    keywords: "quà tặng bé gái",
+  "thanh-toan": {
+    title: "Thanh toán | ECHO",
+    description: "Thanh toán đơn váy bé gái ECHO — COD khi nhận hàng.",
+    keywords: "thanh toán ECHO, COD",
   },
-  {
-    id: "tai-khoan",
-    path: "/tai-khoan",
-    name: "Tài khoản",
-    title: "Tài khoản — ECHO",
-    description: "Tài khoản khách hàng ECHO.",
-    keywords: "tài khoản",
+  "tai-khoan": {
+    title: "Tài khoản | ECHO",
+    description: "Tài khoản khách hàng ECHO — theo dõi đơn váy bé gái.",
+    keywords: "tài khoản ECHO",
   },
+};
+
+const PAGE_SEED_ROWS: Array<Pick<SeoPage, "id" | "path" | "name">> = [
+  { id: "home", path: "/", name: "Trang chủ" },
+  { id: "san-pham", path: "/san-pham", name: "Cửa hàng" },
+  { id: "bo-suu-tap", path: "/bo-suu-tap", name: "Bộ sưu tập" },
+  { id: "cau-chuyen", path: "/cau-chuyen", name: "Câu chuyện" },
+  { id: "lien-he", path: "/lien-he", name: "Liên hệ" },
+  { id: "gio-hang", path: "/gio-hang", name: "Giỏ hàng" },
+  { id: "thanh-toan", path: "/thanh-toan", name: "Thanh toán" },
+  { id: "huong-dan-size", path: "/huong-dan-size", name: "Hướng dẫn size" },
+  { id: "van-chuyen-doi-tra", path: "/van-chuyen-doi-tra", name: "Vận chuyển & đổi trả" },
+  { id: "bao-mat", path: "/bao-mat", name: "Bảo mật" },
+  { id: "dieu-khoan", path: "/dieu-khoan", name: "Điều khoản" },
+  { id: "qua-tang", path: "/qua-tang", name: "Quà tặng" },
+  { id: "tai-khoan", path: "/tai-khoan", name: "Tài khoản" },
 ];
+
+export function suggestPageSeo(page: Pick<SeoPage, "id" | "name" | "path">) {
+  const custom = PAGE_SEO_COPY[page.id];
+  if (custom) return { ...custom };
+  const title = clipWords(`${page.name} | ECHO`, SEO_TITLE_MAX);
+  const description = clipWords(
+    `${page.name} tại ECHO — thời trang bé gái 1–10 tuổi, size 90–140. Xem tại echothuvui.vn.`,
+    SEO_DESC_MAX,
+  );
+  return {
+    title,
+    description,
+    keywords: uniquePhrases([page.name, "ECHO", "thời trang bé gái"]).join(", "),
+  };
+}
 
 /** Cart, checkout, account — keep out of Google. */
 export const SEO_NOINDEX_IDS = new Set(["gio-hang", "thanh-toan", "tai-khoan"]);
+
+export function pageSeoNeedsDefault(page: Pick<SeoPage, "id" | "title" | "description">) {
+  if (SEO_NOINDEX_IDS.has(page.id)) return false;
+  const title = tidy(page.title);
+  const description = tidy(page.description);
+  return title.length < SEO_TITLE_MIN || description.length < SEO_DESC_MIN;
+}
+
+export function applyDefaultPageSeo(page: SeoPage): SeoPage {
+  return { ...page, ...suggestPageSeo(page) };
+}
+
+export const SEO_PAGE_SEEDS: SeoPage[] = PAGE_SEED_ROWS.map((row) => ({
+  ...row,
+  ...suggestPageSeo(row),
+}));
 
 export function mergeSeoPages(existing: SeoPage[] | undefined): SeoPage[] {
   const byId = new Map((existing ?? []).map((p) => [p.id, p]));
   return SEO_PAGE_SEEDS.map((seed) => {
     const cur = byId.get(seed.id);
     if (!cur) return seed;
-    return {
+    const merged: SeoPage = {
       ...seed,
       title: cur.title || seed.title,
       description: cur.description || seed.description,
       keywords: cur.keywords || seed.keywords,
     };
+    return pageSeoNeedsDefault(merged) ? applyDefaultPageSeo(merged) : merged;
   });
 }

@@ -81,6 +81,16 @@ export function IconStory() {
   );
 }
 
+export function IconServer() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <rect x="4" y="4" width="16" height="6" rx="1.4" />
+      <rect x="4" y="14" width="16" height="6" rx="1.4" />
+      <path d="M8 7h.01M8 17h.01M12 7h4M12 17h4" />
+    </svg>
+  );
+}
+
 export function IconSeo() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
