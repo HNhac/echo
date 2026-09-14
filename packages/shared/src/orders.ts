@@ -16,12 +16,16 @@ export type Order = {
   name: string;
   phone: string;
   address: string;
+  email?: string;
+  customerId?: string;
   note?: string;
   pay: OrderPay;
   status: OrderStatus;
   items: OrderItem[];
   subtotal: number;
   ship: number;
+  discount?: number;
+  voucher?: string;
   total: number;
 };
 
@@ -31,6 +35,7 @@ export type CreateOrderInput = {
   address: string;
   note?: string;
   pay: OrderPay;
+  voucher?: string;
   items: Array<{
     slug: string;
     qty: number;

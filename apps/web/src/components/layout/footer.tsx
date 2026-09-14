@@ -1,7 +1,9 @@
 import { ShopLink as Link } from "@/components/store/shop-link";
 import { brand } from "@/config/brand";
 import { BrandMark } from "@/components/layout/brand-mark";
-import { RefreshCcw, Ruler, Sparkles, Truck } from "lucide-react";
+import { Phone, RefreshCcw, Ruler, Sparkles, Truck } from "lucide-react";
+import { FacebookIcon } from "@/components/icons/facebook-icon";
+import { telHref } from "@echo/shared";
 
 const NOTE_ICONS = [Truck, RefreshCcw, Ruler, Sparkles];
 
@@ -33,7 +35,15 @@ const cols = [
   },
 ];
 
-export function Footer({ notes = [] }: { notes?: string[] }) {
+export function Footer({
+  notes = [],
+  phone,
+  facebook,
+}: {
+  notes?: string[];
+  phone?: string;
+  facebook?: string;
+}) {
   const year = new Date().getFullYear();
 
   return (
@@ -59,6 +69,30 @@ export function Footer({ notes = [] }: { notes?: string[] }) {
                   );
                 })}
               </ul>
+            ) : null}
+            {phone || facebook ? (
+              <div className="mt-3.5 flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
+                {phone ? (
+                  <a
+                    href={telHref(phone)}
+                    className="inline-flex items-center gap-1.5 text-[var(--ink-muted)] transition-colors hover:text-[var(--accent)]"
+                  >
+                    <Phone className="h-3.5 w-3.5 text-[var(--accent)]" strokeWidth={1.7} />
+                    {phone}
+                  </a>
+                ) : null}
+                {facebook ? (
+                  <a
+                    href={facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-[var(--ink-muted)] transition-colors hover:text-[var(--accent)]"
+                  >
+                    <FacebookIcon className="h-3.5 w-3.5 text-[var(--accent)]" />
+                    Facebook
+                  </a>
+                ) : null}
+              </div>
             ) : null}
           </div>
 

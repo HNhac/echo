@@ -1,4 +1,5 @@
-import { isUploadPath, storeImagePaths } from "./catalog";
+import { formatVndShort, isUploadPath, storeImagePaths } from "./catalog";
+import { descriptionToHtml, sanitizeHref } from "./html";
 
 export type Banner = {
   id: string;
@@ -294,7 +295,50 @@ export type ShopSettings = {
   seasonFx: SeasonFx;
   seasonOverlays: Partial<Record<SeasonThemeId, string>>;
   seasonOverlayShared: string;
+  shipDaysInner: string;
+  shipDaysNation: string;
+  freeshipFrom: number;
+  shipFee: number;
+  policyProduct: string;
+  policyReturn: string;
+  policyShipping: string;
+  vouchers: ShopVoucher[];
+  voucherCode: string;
+  voucherText: string;
+  voucherAmount: number;
+  voucherMin: number;
+  cskhPhone: string;
+  cskhHours: string;
+  facebookUrl: string;
 };
+
+export type ShopVoucher = {
+  code: string;
+  text: string;
+  amount: number;
+  min: number;
+};
+
+export const DEFAULT_SHOP_VOUCHERS: ShopVoucher[] = [
+  { code: "ECHO20", text: "Giảm 20k mọi đơn", amount: 20_000, min: 0 },
+  { code: "ECHO50", text: "Giảm 50k đơn từ 500k", amount: 50_000, min: 500_000 },
+  { code: "ECHO100", text: "Giảm 100k đơn từ 1 triệu", amount: 100_000, min: 1_000_000 },
+];
+
+export const DEFAULT_POLICY_PRODUCT = `<p>Vải cotton mềm, form dễ mặc cho bé. Giặt nhẹ, lộn trái, không tẩy mạnh. Phơi thoáng, tránh nắng gắt.</p>`;
+export const DEFAULT_POLICY_RETURN = `<p>Đổi size trong 7 ngày khi còn tem mác, chưa giặt, chưa cắt tag. Liên hệ CSKH kèm mã đơn. Phụ kiện cá nhân hoá có thể không đổi trả.</p>`;
+export const DEFAULT_POLICY_SHIPPING = `<p>Giao nội thành 2–4 ngày, toàn quốc 3–6 ngày tùy khu vực. Freeship đơn từ 500.000₫. Kiểm hàng khi nhận với đơn COD.</p>`;
+
+function normalizePolicyHtml(raw: unknown, fallback: string) {
+  const html = descriptionToHtml(String(raw ?? "").slice(0, 20_000));
+  return html || fallback;
+}
+
+export const DEFAULT_SHIP_DAYS_INNER = "2–4 ngày";
+export const DEFAULT_SHIP_DAYS_NATION = "3–6 ngày";
+export const DEFAULT_FREESHIP_FROM = 500_000;
+export const DEFAULT_SHIP_FEE = 30_000;
+export const DEFAULT_CSKH_HOURS = "8:00 - 22:00";
 
 export const DEFAULT_SHOP_SETTINGS: ShopSettings = {
   bannerEnabled: false,
@@ -305,10 +349,196 @@ export const DEFAULT_SHOP_SETTINGS: ShopSettings = {
   seasonFx: { ...DEFAULT_SEASON_FX },
   seasonOverlays: {},
   seasonOverlayShared: "",
+  shipDaysInner: DEFAULT_SHIP_DAYS_INNER,
+  shipDaysNation: DEFAULT_SHIP_DAYS_NATION,
+  freeshipFrom: DEFAULT_FREESHIP_FROM,
+  shipFee: DEFAULT_SHIP_FEE,
+  policyProduct: DEFAULT_POLICY_PRODUCT,
+  policyReturn: DEFAULT_POLICY_RETURN,
+  policyShipping: DEFAULT_POLICY_SHIPPING,
+  vouchers: DEFAULT_SHOP_VOUCHERS.map((item) => ({ ...item })),
+  voucherCode: DEFAULT_SHOP_VOUCHERS[0].code,
+  voucherText: DEFAULT_SHOP_VOUCHERS[0].text,
+  voucherAmount: DEFAULT_SHOP_VOUCHERS[0].amount,
+  voucherMin: DEFAULT_SHOP_VOUCHERS[0].min,
+  cskhPhone: "",
+  cskhHours: DEFAULT_CSKH_HOURS,
+  facebookUrl: "",
 };
+
+function normalizeMoneyVnd(raw: unknown, fallback: number) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return fallback;
+  return Math.round(n);
+}
+
+function normalizeShipDays(raw: unknown, fallback: string) {
+  const value = String(raw ?? "").trim().slice(0, 40);
+  return value || fallback;
+}
+
+export function shippingFeeOf(
+  subtotal: number,
+  settings: Pick<ShopSettings, "freeshipFrom" | "shipFee">,
+) {
+  if (subtotal <= 0) return 0;
+  if (settings.freeshipFrom <= 0) return 0;
+  if (subtotal >= settings.freeshipFrom) return 0;
+  return Math.max(0, settings.shipFee);
+}
+
+export function freeShipLabel(min: number) {
+  if (min <= 0) return "Freeship mọi đơn";
+  return `Freeship đơn từ ${formatVndShort(min)}`;
+}
+
+export function freeShipTitle(min: number) {
+  if (min <= 0) return "Freeship";
+  return `Freeship ${formatVndShort(min)}`;
+}
+
+export function normalizeVoucherCode(raw: unknown) {
+  return String(raw ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 16);
+}
+
+export function normalizeCskhPhone(raw: unknown) {
+  const value = String(raw ?? "").trim().slice(0, 24);
+  if (!/^[\d+\s().-]{8,24}$/.test(value)) return "";
+  return value;
+}
+
+export function normalizeCskhHours(raw: unknown) {
+  return String(raw ?? "").trim().slice(0, 32);
+}
+
+export function formatCskhPhone(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10 && digits.startsWith("0")) {
+    return `${digits.slice(0, 4)}.${digits.slice(4, 7)}.${digits.slice(7)}`;
+  }
+  if (digits.length === 11 && digits.startsWith("84")) {
+    return `0${digits.slice(2, 5)}.${digits.slice(5, 8)}.${digits.slice(8)}`;
+  }
+  return phone.trim();
+}
+
+export function telHref(phone: string) {
+  const digits = phone.replace(/[^\d+]/g, "");
+  return digits ? `tel:${digits}` : "";
+}
+
+export function normalizeFacebookUrl(raw: unknown) {
+  let value = String(raw ?? "").trim();
+  if (!value) return "";
+  if (!/^https?:\/\//i.test(value) && !value.startsWith("/")) value = `https://${value}`;
+  const href = sanitizeHref(value);
+  if (!href.startsWith("http")) return "";
+  try {
+    const host = new URL(href).hostname.replace(/^www\./i, "").toLowerCase();
+    if (
+      host === "facebook.com" ||
+      host.endsWith(".facebook.com") ||
+      host === "fb.com" ||
+      host.endsWith(".fb.com") ||
+      host === "m.me" ||
+      host === "messenger.com"
+    ) {
+      return href;
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+export function shopVouchers(
+  settings: Pick<ShopSettings, "vouchers" | "voucherCode" | "voucherText" | "voucherAmount" | "voucherMin">,
+): ShopVoucher[] {
+  if (Array.isArray(settings.vouchers) && settings.vouchers.length) return settings.vouchers;
+  if (settings.voucherCode) {
+    return [
+      {
+        code: settings.voucherCode,
+        text: settings.voucherText,
+        amount: settings.voucherAmount,
+        min: settings.voucherMin,
+      },
+    ];
+  }
+  return [];
+}
+
+export function voucherOf(
+  settings: Pick<ShopSettings, "vouchers" | "voucherCode" | "voucherText" | "voucherAmount" | "voucherMin">,
+  code?: string,
+) {
+  const want = normalizeVoucherCode(code);
+  if (!want) return undefined;
+  return shopVouchers(settings).find((item) => item.code === want);
+}
+
+export function voucherHint(item: ShopVoucher) {
+  if (item.text.trim()) return item.text.trim();
+  if (item.amount > 0) return `Giảm ${formatVndShort(item.amount)}`;
+  return "Dùng khi thanh toán";
+}
+
+export function vouchersForOrder(
+  settings: Pick<ShopSettings, "vouchers" | "voucherCode" | "voucherText" | "voucherAmount" | "voucherMin">,
+  subtotal: number,
+) {
+  if (subtotal <= 0) return [];
+  return shopVouchers(settings).filter((item) => {
+    if (item.amount <= 0) return false;
+    if (item.min > 0 && subtotal < item.min) return false;
+    return true;
+  });
+}
+
+export function voucherDiscountOf(
+  subtotal: number,
+  settings: Pick<ShopSettings, "vouchers" | "voucherCode" | "voucherAmount" | "voucherMin">,
+  code?: string,
+) {
+  const found = voucherOf(settings, code);
+  if (!found || found.amount <= 0 || subtotal <= 0) return 0;
+  if (found.min > 0 && subtotal < found.min) return 0;
+  return Math.min(found.amount, subtotal);
+}
+
+function normalizeVoucherList(raw: unknown, legacy: Partial<ShopSettings>): ShopVoucher[] {
+  const out: ShopVoucher[] = [];
+  const seen = new Set<string>();
+  const source = Array.isArray(raw)
+    ? raw
+    : legacy.voucherCode
+      ? [{ code: legacy.voucherCode, text: legacy.voucherText, amount: legacy.voucherAmount, min: legacy.voucherMin }]
+      : DEFAULT_SHOP_VOUCHERS;
+  for (const item of source) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as Partial<ShopVoucher>;
+    const code = normalizeVoucherCode(row.code);
+    if (!code || seen.has(code)) continue;
+    seen.add(code);
+    out.push({
+      code,
+      text: String(row.text ?? "").trim().slice(0, 80),
+      amount: normalizeMoneyVnd(row.amount, 0),
+      min: normalizeMoneyVnd(row.min, 0),
+    });
+    if (out.length >= 8) break;
+  }
+  return out;
+}
 
 export function normalizeShopSettings(raw: unknown): ShopSettings {
   const row = raw && typeof raw === "object" ? (raw as Partial<ShopSettings>) : {};
+  const vouchers = normalizeVoucherList(row.vouchers, row);
+  const first = vouchers[0];
   return {
     bannerEnabled: row.bannerEnabled === true,
     announcementEnabled: row.announcementEnabled !== false,
@@ -318,6 +548,21 @@ export function normalizeShopSettings(raw: unknown): ShopSettings {
     seasonFx: normalizeSeasonFx(row.seasonFx),
     seasonOverlays: normalizeSeasonOverlays(row.seasonOverlays),
     seasonOverlayShared: normalizeSeasonOverlaySrc(row.seasonOverlayShared),
+    shipDaysInner: normalizeShipDays(row.shipDaysInner, DEFAULT_SHIP_DAYS_INNER),
+    shipDaysNation: normalizeShipDays(row.shipDaysNation, DEFAULT_SHIP_DAYS_NATION),
+    freeshipFrom: normalizeMoneyVnd(row.freeshipFrom, DEFAULT_FREESHIP_FROM),
+    shipFee: normalizeMoneyVnd(row.shipFee, DEFAULT_SHIP_FEE),
+    policyProduct: normalizePolicyHtml(row.policyProduct, DEFAULT_POLICY_PRODUCT),
+    policyReturn: normalizePolicyHtml(row.policyReturn, DEFAULT_POLICY_RETURN),
+    policyShipping: normalizePolicyHtml(row.policyShipping, DEFAULT_POLICY_SHIPPING),
+    vouchers,
+    voucherCode: first?.code ?? "",
+    voucherText: first?.text ?? "",
+    voucherAmount: first?.amount ?? 0,
+    voucherMin: first?.min ?? 0,
+    cskhPhone: normalizeCskhPhone(row.cskhPhone),
+    cskhHours: row.cskhHours === undefined ? DEFAULT_CSKH_HOURS : normalizeCskhHours(row.cskhHours),
+    facebookUrl: normalizeFacebookUrl(row.facebookUrl),
   };
 }
 

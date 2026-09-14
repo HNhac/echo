@@ -41,6 +41,15 @@ export function IconPlus() {
   );
 }
 
+export function IconCustomer() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <circle cx="12" cy="8" r="3.2" />
+      <path d="M6.2 20a5.8 5.8 0 0 1 11.6 0" />
+    </svg>
+  );
+}
+
 export function IconPeople() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
@@ -177,6 +186,30 @@ export function IconExternal() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
       <path d="M10 5H6.5A2.5 2.5 0 0 0 4 7.5v10A2.5 2.5 0 0 0 6.5 20h10a2.5 2.5 0 0 0 2.5-2.5V14" />
       <path d="M14 4h6v6M20 4l-9 9" />
+    </svg>
+  );
+}
+
+export function IconMenu() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
+      <path d="M5 7h14M5 12h14M5 17h14" />
+    </svg>
+  );
+}
+
+export function IconFold() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <path d="M21 6H9M21 12H9M21 18H9M5 8.5 2.5 12 5 15.5" />
+    </svg>
+  );
+}
+
+export function IconChevron() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <path d="M14 6l-6 6 6 6" />
     </svg>
   );
 }

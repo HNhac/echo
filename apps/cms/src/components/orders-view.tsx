@@ -78,6 +78,11 @@ export function OrdersView({ orders, filter, onFilter, onStatus }: Props) {
                   <td>
                     <strong>{money(o.total)}</strong>
                     <div className="muted tiny">Ship {money(o.ship)}</div>
+                    {o.discount ? (
+                      <div className="muted tiny">
+                        Voucher {o.voucher || ""} −{money(o.discount)}
+                      </div>
+                    ) : null}
                   </td>
                   <td>
                     <span className={`badge badge--${STATUS[o.status].tone}`}>{STATUS[o.status].label}</span>

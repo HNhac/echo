@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   hasPermission,
   DEFAULT_SHOP_SETTINGS,
@@ -14,6 +14,7 @@ import {
   suggestProductSeo,
   type Banner,
   type Category,
+  type CustomerPublic,
   type Order,
   type OrderStatus,
   type Permission,
@@ -31,6 +32,7 @@ import { OverviewView } from "@/components/overview-view";
 import { BannersView, type BannerDraft } from "@/components/banners-view";
 import { ProductsView, type ProductDraft } from "@/components/products-view";
 import { UsersView, type UserDraft } from "@/components/users-view";
+import { CustomersView, type CustomerDraft } from "@/components/customers-view";
 import { SeoView } from "@/components/seo-view";
 import { HostStatsView } from "@/components/host-stats-view";
 import { BrandLogo } from "@/components/brand-logo";
@@ -39,18 +41,48 @@ import { SettingsView } from "@/components/settings-view";
 import { StoryView } from "@/components/story-view";
 import { StudioBar } from "@/components/studio-bar";
 import { ToastStack, useToasts } from "@/components/toast";
-import { IconBag, IconBanner, IconHanger, IconHome, IconPeople, IconSeo, IconServer, IconSettings, IconStory } from "@/components/icons";
+import {
+  IconBag,
+  IconBanner,
+  IconCustomer,
+  IconFold,
+  IconHanger,
+  IconHome,
+  IconMenu,
+  IconPeople,
+  IconSeo,
+  IconServer,
+  IconSettings,
+  IconStory,
+  IconX,
+} from "@/components/icons";
 import { API, KEY_STORAGE, adminHeaders } from "@/lib/api";
 import { digitsOnly, money, slugify } from "@/lib/format";
 import {
+  RAIL_SECTIONS,
+  RAIL_STORAGE,
   SETTINGS_PANES,
   STUDIO_PATHS,
   STUDIO_TITLES,
+  railItemAllowed,
   settingsPaneFromPath,
   tabAllowed,
   tabFromPath,
   type Tab,
 } from "@/lib/studio";
+
+const RAIL_ICONS = {
+  overview: IconHome,
+  orders: IconBag,
+  customers: IconCustomer,
+  products: IconHanger,
+  banners: IconBanner,
+  settings: IconSettings,
+  story: IconStory,
+  seo: IconSeo,
+  host: IconServer,
+  users: IconPeople,
+} as const;
 
 const emptyProduct: ProductDraft = {
   name: "",
@@ -119,9 +151,18 @@ const emptyBanner: BannerDraft = {
   active: true,
 };
 
+const emptyCustomer: CustomerDraft = {
+  name: "",
+  email: "",
+  phone: "",
+  address: "",
+  password: "",
+};
+
 const emptyReady = (): Record<Tab, boolean> => ({
   overview: false,
   orders: false,
+  customers: false,
   products: false,
   banners: false,
   settings: false,
@@ -148,6 +189,11 @@ export function StudioApp() {
   const [cats, setCats] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [users, setUsers] = useState<StaffPublic[]>([]);
+  const [customers, setCustomers] = useState<CustomerPublic[]>([]);
+  const [customerQuery, setCustomerQuery] = useState("");
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<CustomerPublic | null>(null);
+  const [customerForm, setCustomerForm] = useState(emptyCustomer);
   const [pages, setPages] = useState<SeoPage[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [bannerOpen, setBannerOpen] = useState(false);
@@ -165,10 +211,33 @@ export function StudioApp() {
   const [userOpen, setUserOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<StaffPublic | null>(null);
   const [userForm, setUserForm] = useState(emptyUser);
+  const [railMin, setRailMin] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(true);
+  const skipMobileNavClose = useRef(true);
   const toasts = useToasts();
 
   const authed = Boolean(key && me);
   const can = (perm: Permission) => (me ? hasPermission(me, perm) : false);
+
+  const toggleRail = () => {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 900px)").matches) {
+      setMobileNavOpen((open) => !open);
+      return;
+    }
+    setRailMin((current) => {
+      const next = !current;
+      localStorage.setItem(RAIL_STORAGE, next ? "1" : "0");
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (skipMobileNavClose.current) {
+      skipMobileNavClose.current = false;
+      return;
+    }
+    setMobileNavOpen(false);
+  }, [pathname]);
 
   const session = useCallback(async (adminKey: string) => {
     try {
@@ -193,6 +262,7 @@ export function StudioApp() {
 
   useEffect(() => {
     const saved = localStorage.getItem(KEY_STORAGE);
+    setRailMin(localStorage.getItem(RAIL_STORAGE) === "1");
     if (!saved) {
       setHydrated(true);
       return;
@@ -217,15 +287,22 @@ export function StudioApp() {
           const jobs: Promise<void>[] = [];
           if (hasPermission(user, "orders")) {
             jobs.push(
-              fetch(`${API}/orders`, { cache: "no-store", headers: { "x-admin-key": key } })
-                .then((res) => res.json())
-                .then((data) => {
-                  if (!alive) return;
-                  if (Array.isArray(data)) {
-                    setOrders(data);
-                    setReady((cur) => ({ ...cur, orders: true }));
-                  }
-                }),
+              Promise.all([
+                fetch(`${API}/orders`, { cache: "no-store", headers: { "x-admin-key": key } }).then((res) => res.json()),
+                fetch(`${API}/admin/customers`, { cache: "no-store", headers: { "x-admin-key": key } }).then((res) =>
+                  res.json(),
+                ),
+              ]).then(([orderData, customerData]) => {
+                if (!alive) return;
+                if (Array.isArray(orderData)) {
+                  setOrders(orderData);
+                  setReady((cur) => ({ ...cur, orders: true }));
+                }
+                if (Array.isArray(customerData)) {
+                  setCustomers(customerData);
+                  setReady((cur) => ({ ...cur, customers: true }));
+                }
+              }),
             );
           }
           if (hasPermission(user, "products")) {
@@ -284,6 +361,19 @@ export function StudioApp() {
             setOrders(data);
             setReady((cur) => ({ ...cur, orders: true }));
           } else if (first) setError("Không đọc được đơn — kiểm tra API cổng 4000.");
+        } else if (tab === "customers") {
+          const [res, orderRes] = await Promise.all([
+            fetch(`${API}/admin/customers`, { cache: "no-store", headers: { "x-admin-key": key } }),
+            fetch(`${API}/orders`, { cache: "no-store", headers: { "x-admin-key": key } }),
+          ]);
+          const data = await res.json();
+          const orderData = await orderRes.json();
+          if (!alive) return;
+          if (Array.isArray(orderData)) setOrders(orderData);
+          if (Array.isArray(data)) {
+            setCustomers(data);
+            setReady((cur) => ({ ...cur, customers: true }));
+          } else if (first) setError("Không đọc được khách hàng.");
         } else if (tab === "products") {
           const [prodRes, catRes] = await Promise.all([
             fetch(`${API}/products`, { cache: "no-store" }),
@@ -536,6 +626,21 @@ export function StudioApp() {
     announcementEnabled?: boolean;
     footerNotesEnabled?: boolean;
     notices?: ShopSettings["notices"];
+    shipDaysInner?: string;
+    shipDaysNation?: string;
+    freeshipFrom?: number;
+    shipFee?: number;
+    policyProduct?: string;
+    policyReturn?: string;
+    policyShipping?: string;
+    vouchers?: ShopSettings["vouchers"];
+    voucherCode?: string;
+    voucherText?: string;
+    voucherAmount?: number;
+    voucherMin?: number;
+    cskhPhone?: string;
+    cskhHours?: string;
+    facebookUrl?: string;
   }) {
     setBusy(true);
     setError("");
@@ -555,11 +660,32 @@ export function StudioApp() {
       const saved = normalizeShopSettings({ ...shopSettings, ...data });
       setShopSettings(saved);
       const themeChanged = saved.seasonTheme !== shopSettings.seasonTheme;
+      const shipChanged =
+        saved.shipDaysInner !== shopSettings.shipDaysInner ||
+        saved.shipDaysNation !== shopSettings.shipDaysNation ||
+        saved.freeshipFrom !== shopSettings.freeshipFrom ||
+        saved.shipFee !== shopSettings.shipFee;
+      const policyChanged =
+        saved.policyProduct !== shopSettings.policyProduct ||
+        saved.policyReturn !== shopSettings.policyReturn ||
+        saved.policyShipping !== shopSettings.policyShipping;
+      const contactChanged =
+        JSON.stringify(saved.vouchers) !== JSON.stringify(shopSettings.vouchers) ||
+        saved.voucherCode !== shopSettings.voucherCode ||
+        saved.cskhPhone !== shopSettings.cskhPhone ||
+        saved.cskhHours !== shopSettings.cskhHours ||
+        saved.facebookUrl !== shopSettings.facebookUrl;
       const themeName = SEASON_THEMES.find((item) => item.id === saved.seasonTheme)?.name ?? "Mặc định";
       toasts.ok(
         themeChanged
           ? `Đã lưu theme ${themeName}. Mở lại shop để thấy màu mới.`
-          : "Đã lưu header / footer shop. Mở lại shop để thấy.",
+          : shipChanged
+            ? "Đã lưu giao hàng. Mở lại shop để thấy."
+            : policyChanged
+              ? "Đã lưu chính sách. Mở lại shop để thấy."
+              : contactChanged
+                ? "Đã lưu liên hệ & voucher. Mở lại shop để thấy."
+                : "Đã lưu header / footer shop. Mở lại shop để thấy.",
       );
       return true;
     } catch {
@@ -724,6 +850,12 @@ export function StudioApp() {
     const res = await fetch(`${API}/admin/users`, { cache: "no-store", headers: { "x-admin-key": key } });
     const data = await res.json();
     if (Array.isArray(data)) setUsers(data);
+  }
+
+  async function reloadCustomers() {
+    const res = await fetch(`${API}/admin/customers`, { cache: "no-store", headers: { "x-admin-key": key } });
+    const data = await res.json();
+    if (Array.isArray(data)) setCustomers(data);
   }
 
   function openCreateProduct() {
@@ -1000,6 +1132,88 @@ export function StudioApp() {
     }
   }
 
+  function openCreateCustomer() {
+    setEditingCustomer(null);
+    setCustomerForm(emptyCustomer);
+    setCustomerOpen(true);
+  }
+
+  function openEditCustomer(customer: CustomerPublic) {
+    setEditingCustomer(customer);
+    setCustomerForm({
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      password: "",
+    });
+    setCustomerOpen(true);
+  }
+
+  async function saveCustomer(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const res = editingCustomer
+        ? await fetch(`${API}/admin/customers/${editingCustomer.id}`, {
+            method: "PATCH",
+            headers: adminHeaders(key),
+            body: JSON.stringify({
+              name: customerForm.name,
+              email: customerForm.email,
+              phone: customerForm.phone,
+              address: customerForm.address,
+              ...(customerForm.password ? { password: customerForm.password } : {}),
+            }),
+          })
+        : await fetch(`${API}/admin/customers`, {
+            method: "POST",
+            headers: adminHeaders(key),
+            body: JSON.stringify(customerForm),
+          });
+      if (!res.ok) {
+        const msg = (await res.json()).error ?? "Không lưu được khách hàng";
+        setError(msg);
+        toasts.err(msg);
+        return;
+      }
+      setCustomerOpen(false);
+      setEditingCustomer(null);
+      setCustomerForm(emptyCustomer);
+      await reloadCustomers();
+      toasts.ok(editingCustomer ? `Đã sửa “${customerForm.name}”.` : `Đã thêm khách “${customerForm.name}”.`);
+    } catch {
+      const msg = "Không lưu được khách hàng — API không phản hồi.";
+      setError(msg);
+      toasts.err(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeCustomer(customer: CustomerPublic) {
+    if (!window.confirm(`Xóa khách hàng “${customer.email}”?`)) return;
+    try {
+      const res = await fetch(`${API}/admin/customers/${customer.id}`, {
+        method: "DELETE",
+        headers: adminHeaders(key),
+      });
+      if (!res.ok) {
+        const msg = (await res.json()).error ?? "Không xóa được";
+        setError(msg);
+        toasts.err(msg);
+        return;
+      }
+      await reloadCustomers();
+      toasts.ok(`Đã xóa “${customer.email}”.`);
+    } catch {
+      const msg = "Không xóa được khách hàng — API không phản hồi.";
+      setError(msg);
+      toasts.err(msg);
+    }
+  }
+
   const stats = useMemo(() => {
     if (!me) return [];
     if (tab === "orders" && hasPermission(me, "orders")) {
@@ -1018,6 +1232,13 @@ export function StudioApp() {
     if (tab === "seo" && hasPermission(me, "products")) {
       return [{ label: "Trang SEO", value: String(pages.length) }];
     }
+    if (tab === "customers" && hasPermission(me, "orders")) {
+      return [
+        { label: "Khách hàng", value: String(customers.length) },
+        { label: "Google", value: String(customers.filter((item) => item.google).length) },
+        { label: "Có đơn", value: String(customers.filter((item) => orders.some((o) => o.customerId === item.id)).length) },
+      ];
+    }
     if (tab === "users" && hasPermission(me, "users")) {
       return [
         { label: "Tài khoản", value: String(users.length) },
@@ -1026,7 +1247,7 @@ export function StudioApp() {
       ];
     }
     return [];
-  }, [me, tab, orders, products.length, cats.length, pages.length, users.length]);
+  }, [me, tab, orders, products.length, cats.length, pages.length, users.length, customers]);
 
   const titles = STUDIO_TITLES;
 
@@ -1050,60 +1271,64 @@ export function StudioApp() {
   }
 
   return (
-    <div className="studio">
+    <div className={`studio${railMin ? " is-rail-min" : ""}${mobileNavOpen ? " is-nav-open" : ""}`}>
       <ToastStack items={toasts.items} onDismiss={toasts.dismiss} />
       <aside className="rail">
-        <Link href={STUDIO_PATHS.overview} className="brand">
-          <BrandLogo />
-          <span className="brand__logo">
-            ECHO<span>Studio</span>
-          </span>
-        </Link>
-        <nav className="nav">
-          <Link href={STUDIO_PATHS.overview} className={tab === "overview" ? "is-on" : ""}>
-            <IconHome /> Tổng quan
-          </Link>
-          {can("orders") ? (
-            <Link href={STUDIO_PATHS.orders} className={tab === "orders" ? "is-on" : ""}>
-              <IconBag /> Đơn hàng
+        <div className="rail__body">
+          <div className="rail__top">
+            <Link href={STUDIO_PATHS.overview} className="brand">
+              <BrandLogo />
+              <span className="brand__logo">
+                ECHO<span>Studio</span>
+              </span>
             </Link>
-          ) : null}
-          {can("products") ? (
-            <Link href={STUDIO_PATHS.products} className={tab === "products" ? "is-on" : ""}>
-              <IconHanger /> Sản phẩm
-            </Link>
-          ) : null}
-          {can("products") ? (
-            <Link href={STUDIO_PATHS.banners} className={tab === "banners" ? "is-on" : ""}>
-              <IconBanner /> Banner
-            </Link>
-          ) : null}
-          {can("products") ? (
-            <Link href={STUDIO_PATHS.settings} className={tab === "settings" ? "is-on" : ""}>
-              <IconSettings /> Cài đặt
-            </Link>
-          ) : null}
-          {can("products") ? (
-            <Link href={STUDIO_PATHS.story} className={tab === "story" ? "is-on" : ""}>
-              <IconStory /> Câu chuyện
-            </Link>
-          ) : null}
-          {can("products") ? (
-            <Link href={STUDIO_PATHS.seo} className={tab === "seo" ? "is-on" : ""}>
-              <IconSeo /> SEO trang
-            </Link>
-          ) : null}
-          {me?.role === "owner" ? (
-            <Link href={STUDIO_PATHS.host} className={tab === "host" ? "is-on" : ""}>
-              <IconServer /> Máy chủ
-            </Link>
-          ) : null}
-          {can("users") ? (
-            <Link href={STUDIO_PATHS.users} className={tab === "users" ? "is-on" : ""}>
-              <IconPeople /> Tài khoản
-            </Link>
-          ) : null}
-        </nav>
+            <button
+              type="button"
+              className="rail-toggle rail-toggle--mobile"
+              onClick={toggleRail}
+              aria-expanded={mobileNavOpen}
+              aria-controls="studio-nav"
+              aria-label={mobileNavOpen ? "Đóng menu" : "Mở menu"}
+            >
+              {mobileNavOpen ? <IconX /> : <IconMenu />}
+            </button>
+          </div>
+          <nav id="studio-nav" className="nav" aria-label="Menu studio">
+            {RAIL_SECTIONS.map((section) => {
+              const items = section.items.filter((item) => railItemAllowed(me, item.need));
+              if (!items.length) return null;
+              return (
+                <div key={section.label} className="nav-group">
+                  <p className="nav-sec">{section.label}</p>
+                  {items.map((item) => {
+                    const Icon = RAIL_ICONS[item.tab];
+                    return (
+                      <Link
+                        key={item.tab}
+                        href={STUDIO_PATHS[item.tab]}
+                        className={tab === item.tab ? "is-on" : ""}
+                        title={item.label}
+                      >
+                        <Icon />
+                        <span className="nav-label">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </nav>
+        </div>
+        <button
+          type="button"
+          className="rail-toggle rail-toggle--desk"
+          onClick={toggleRail}
+          aria-expanded={!railMin}
+          aria-controls="studio-nav"
+          aria-label={railMin ? "Mở menu" : "Thu menu"}
+        >
+          <IconFold />
+        </button>
       </aside>
 
       <main className="canvas">
@@ -1154,6 +1379,31 @@ export function StudioApp() {
             <OrdersView orders={orders} filter={orderFilter} onFilter={setOrderFilter} onStatus={setStatus} />
           ) : (
             <TabSkeleton kind="orders" />
+          )
+        ) : null}
+        {tab === "customers" && can("orders") ? (
+          ready.customers ? (
+            <CustomersView
+              customers={customers}
+              orders={orders}
+              query={customerQuery}
+              onQuery={setCustomerQuery}
+              open={customerOpen}
+              editing={editingCustomer}
+              onOpenCreate={openCreateCustomer}
+              onEdit={openEditCustomer}
+              onClose={() => {
+                setCustomerOpen(false);
+                setEditingCustomer(null);
+              }}
+              form={customerForm}
+              onForm={setCustomerForm}
+              onSave={saveCustomer}
+              onDelete={removeCustomer}
+              busy={busy}
+            />
+          ) : (
+            <TabSkeleton kind="customers" />
           )
         ) : null}
         {tab === "products" && can("products") ? (

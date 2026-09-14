@@ -8,20 +8,30 @@ import {
   formatVnd,
   hasPermission,
   homeCatalogOf,
+  isEmail,
+  normalizeEmail,
   normalizeShopSettings,
   normalizeShopStory,
   shopBanners,
+  shippingFeeOf,
+  normalizeVoucherCode,
+  voucherDiscountOf,
   storeBanner,
   storeImagePaths,
   normalizeUsername,
   permissionsFor,
   productUnitPrice,
+  toCustomerPublic,
   toStaffPublic,
   uniqueCategorySlug,
   type Banner,
   type Category,
+  type CreateCustomerInput,
   type CreateOrderInput,
   type CreateStaffInput,
+  type CustomerLoginInput,
+  type CustomerProfileInput,
+  type CustomerRegisterInput,
   type Order,
   type Permission,
   type Product,
@@ -31,9 +41,11 @@ import {
   type StaffLoginInput,
   type StaffRole,
   type StaffUser,
+  type UpdateCustomerInput,
   type UpdateStaffInput,
 } from "@echo/shared";
 import { ADMIN_KEY, buildStaff, hashPassword, verifyPassword } from "./auth.js";
+import { buildCustomer, findCustomerByEmail, googleClientId, verifyGoogleAccessToken, verifyGoogleIdToken } from "./customers.js";
 import { loadDb, saveDb } from "./db.js";
 import { openapiSpec, swaggerAllowed, swaggerHtml } from "./openapi.js";
 import { compressLegacyUploads, readUpload, saveUpload } from "./uploads.js";
@@ -87,7 +99,7 @@ app.use(
   "*",
   cors({
     origin: (origin) => corsOrigin(origin),
-    allowHeaders: ["Content-Type", "x-admin-key"],
+    allowHeaders: ["Content-Type", "x-admin-key", "x-customer-key"],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   }),
 );
@@ -111,6 +123,19 @@ function gate(c: Context, perm?: Permission) {
   return { ok: true as const, user };
 }
 
+function getShopper(c: Context) {
+  const token = c.req.header("x-customer-key")?.trim();
+  if (!token) return undefined;
+  const db = loadDb();
+  return db.customers.find((item) => item.key === token);
+}
+
+function shopperGate(c: Context) {
+  const customer = getShopper(c);
+  if (!customer) return { ok: false as const, res: c.json({ error: "Unauthorized" }, 401) };
+  return { ok: true as const, customer };
+}
+
 function ownerCount(users: StaffUser[]) {
   return users.filter((u) => u.role === "owner").length;
 }
@@ -124,6 +149,187 @@ app.use("*", async (c, next) => {
 });
 
 app.get("/health", (c) => c.json({ ok: true, service: "echo-api" }));
+
+app.get("/auth/google-config", (c) => {
+  const clientId = googleClientId();
+  return c.json({ enabled: Boolean(clientId), clientId: clientId || undefined });
+});
+
+app.post("/auth/register", async (c) => {
+  const body = await c.req.json<CustomerRegisterInput>();
+  const name = body.name?.trim() ?? "";
+  const email = normalizeEmail(body.email ?? "");
+  const password = body.password ?? "";
+  if (name.length < 2) return c.json({ error: "Tên quá ngắn" }, 400);
+  if (!isEmail(email)) return c.json({ error: "Email không hợp lệ" }, 400);
+  if (password.length < 6) return c.json({ error: "Mật khẩu tối thiểu 6 ký tự" }, 400);
+
+  const db = loadDb();
+  if (findCustomerByEmail(db.customers, email)) {
+    return c.json({ error: "Email đã được đăng ký" }, 409);
+  }
+  const customer = buildCustomer({
+    name,
+    email,
+    password,
+    phone: body.phone,
+    address: body.address,
+  });
+  db.customers.unshift(customer);
+  saveDb(db);
+  return c.json({ ok: true, key: customer.key, user: toCustomerPublic(customer) }, 201);
+});
+
+app.post("/auth/login", async (c) => {
+  const body = await c.req.json<CustomerLoginInput>();
+  const email = normalizeEmail(body.email ?? "");
+  const password = body.password ?? "";
+  if (!isEmail(email) || !password) return c.json({ error: "Thiếu email hoặc mật khẩu" }, 400);
+
+  const db = loadDb();
+  const customer = findCustomerByEmail(db.customers, email);
+  if (!customer) return c.json({ error: "Sai email hoặc mật khẩu" }, 401);
+  if (!customer.passwordHash) {
+    return c.json({ error: "Tài khoản này đăng nhập bằng Google" }, 400);
+  }
+  if (!verifyPassword(password, customer.passwordHash)) {
+    return c.json({ error: "Sai email hoặc mật khẩu" }, 401);
+  }
+  return c.json({ ok: true, key: customer.key, user: toCustomerPublic(customer) });
+});
+
+app.post("/auth/google", async (c) => {
+  if (!googleClientId()) {
+    return c.json({ error: "Chưa cấu hình đăng nhập Google (GOOGLE_CLIENT_ID)" }, 503);
+  }
+  const body = await c.req.json<{ idToken?: string; accessToken?: string }>();
+  const profile = body.accessToken
+    ? await verifyGoogleAccessToken(body.accessToken)
+    : await verifyGoogleIdToken(body.idToken ?? "");
+  if (!profile) return c.json({ error: "Google không xác nhận được tài khoản" }, 401);
+
+  const db = loadDb();
+  let customer =
+    db.customers.find((item) => item.googleId === profile.sub) ??
+    findCustomerByEmail(db.customers, profile.email);
+  if (!customer) {
+    customer = buildCustomer({
+      name: profile.name,
+      email: profile.email,
+      password: "",
+      googleId: profile.sub,
+    });
+    db.customers.unshift(customer);
+    saveDb(db);
+  } else if (!customer.googleId) {
+    customer.googleId = profile.sub;
+    if (!customer.name.trim()) customer.name = profile.name;
+    saveDb(db);
+  }
+  return c.json({ ok: true, key: customer.key, user: toCustomerPublic(customer) });
+});
+
+app.get("/auth/me", (c) => {
+  const auth = shopperGate(c);
+  if (!auth.ok) return auth.res;
+  return c.json(toCustomerPublic(auth.customer));
+});
+
+app.patch("/auth/me", async (c) => {
+  const auth = shopperGate(c);
+  if (!auth.ok) return auth.res;
+  const body = await c.req.json<CustomerProfileInput>();
+  const db = loadDb();
+  const customer = db.customers.find((item) => item.id === auth.customer.id);
+  if (!customer) return c.json({ error: "Không tìm thấy" }, 404);
+  if (body.name?.trim()) customer.name = body.name.trim();
+  if (body.phone !== undefined) customer.phone = body.phone.trim();
+  if (body.address !== undefined) customer.address = body.address.trim();
+  if (body.password) {
+    if (body.password.length < 6) return c.json({ error: "Mật khẩu tối thiểu 6 ký tự" }, 400);
+    customer.passwordHash = hashPassword(body.password);
+  }
+  saveDb(db);
+  return c.json(toCustomerPublic(customer));
+});
+
+app.get("/auth/orders", (c) => {
+  const auth = shopperGate(c);
+  if (!auth.ok) return auth.res;
+  const db = loadDb();
+  return c.json(db.orders.filter((order) => order.customerId === auth.customer.id));
+});
+
+app.get("/admin/customers", (c) => {
+  const auth = gate(c, "orders");
+  if (!auth.ok) return auth.res;
+  const db = loadDb();
+  return c.json(db.customers.map(toCustomerPublic));
+});
+
+app.post("/admin/customers", async (c) => {
+  const auth = gate(c, "orders");
+  if (!auth.ok) return auth.res;
+  const body = await c.req.json<CreateCustomerInput>();
+  const name = body.name?.trim() ?? "";
+  const email = normalizeEmail(body.email ?? "");
+  const password = body.password ?? "";
+  if (name.length < 2) return c.json({ error: "Tên quá ngắn" }, 400);
+  if (!isEmail(email)) return c.json({ error: "Email không hợp lệ" }, 400);
+  if (password.length < 6) return c.json({ error: "Mật khẩu tối thiểu 6 ký tự" }, 400);
+
+  const db = loadDb();
+  if (findCustomerByEmail(db.customers, email)) {
+    return c.json({ error: "Email đã tồn tại" }, 409);
+  }
+  const customer = buildCustomer({
+    name,
+    email,
+    password,
+    phone: body.phone,
+    address: body.address,
+  });
+  db.customers.unshift(customer);
+  saveDb(db);
+  return c.json(toCustomerPublic(customer), 201);
+});
+
+app.patch("/admin/customers/:id", async (c) => {
+  const auth = gate(c, "orders");
+  if (!auth.ok) return auth.res;
+  const db = loadDb();
+  const customer = db.customers.find((item) => item.id === c.req.param("id"));
+  if (!customer) return c.json({ error: "Không tìm thấy" }, 404);
+  const body = await c.req.json<UpdateCustomerInput>();
+  if (body.name?.trim()) customer.name = body.name.trim();
+  if (body.email) {
+    const email = normalizeEmail(body.email);
+    if (!isEmail(email)) return c.json({ error: "Email không hợp lệ" }, 400);
+    if (findCustomerByEmail(db.customers, email)?.id !== customer.id) {
+      return c.json({ error: "Email đã tồn tại" }, 409);
+    }
+    customer.email = email;
+  }
+  if (body.phone !== undefined) customer.phone = body.phone.trim();
+  if (body.address !== undefined) customer.address = body.address.trim();
+  if (body.password) {
+    if (body.password.length < 6) return c.json({ error: "Mật khẩu tối thiểu 6 ký tự" }, 400);
+    customer.passwordHash = hashPassword(body.password);
+  }
+  saveDb(db);
+  return c.json(toCustomerPublic(customer));
+});
+
+app.delete("/admin/customers/:id", (c) => {
+  const auth = gate(c, "orders");
+  if (!auth.ok) return auth.res;
+  const db = loadDb();
+  const before = db.customers.length;
+  db.customers = db.customers.filter((item) => item.id !== c.req.param("id"));
+  if (db.customers.length === before) return c.json({ error: "Không tìm thấy" }, 404);
+  saveDb(db);
+  return c.json({ ok: true });
+});
 
 app.post("/visit", async (c) => {
   recordVisit({
@@ -614,20 +820,26 @@ app.post("/orders", async (c) => {
   }
 
   const subtotal = items.reduce((s, it) => s + it.unitPrice * it.qty, 0);
-  const ship = subtotal >= 500000 ? 0 : 30000;
+  const ship = shippingFeeOf(subtotal, db.settings);
+  const discount = voucherDiscountOf(subtotal, db.settings, body.voucher);
+  const shopper = getShopper(c);
   const order: Order = {
     id: `ECHO-${String(Date.now()).slice(-6)}`,
     createdAt: new Date().toISOString(),
     name: body.name.trim(),
     phone: body.phone.trim(),
     address: body.address.trim(),
+    email: shopper?.email,
+    customerId: shopper?.id,
     note: body.note?.trim() || undefined,
     pay: body.pay === "bank" ? "bank" : "cod",
     status: "new",
     items,
     subtotal,
     ship,
-    total: subtotal + ship,
+    discount: discount || undefined,
+    voucher: discount ? normalizeVoucherCode(body.voucher) : undefined,
+    total: subtotal - discount + ship,
   };
   db.orders.unshift(order);
   saveDb(db);

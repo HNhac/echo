@@ -512,8 +512,7 @@ html[data-theme="dark"] .login__card {
 /* Shell */
 .studio {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
+  display: flex;
   font-family: var(--font-login), var(--font-sans), ui-sans-serif, sans-serif;
 }
 
@@ -527,13 +526,38 @@ html[data-theme="dark"] .login__card {
 }
 
 .rail {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1.6rem;
+  flex: 0 0 248px;
+  width: 248px;
+  max-width: 248px;
   padding: 1.35rem 0.95rem 1.1rem;
   background: var(--rail);
   color: var(--rail-ink);
   border-right: 1px solid var(--rail-line);
+  transition:
+    width 0.2s cubic-bezier(0.2, 0, 0, 1),
+    flex-basis 0.2s cubic-bezier(0.2, 0, 0, 1),
+    max-width 0.2s cubic-bezier(0.2, 0, 0, 1),
+    padding 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.rail__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 1.6rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.rail__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .brand {
@@ -541,7 +565,9 @@ html[data-theme="dark"] .login__card {
   flex-direction: row;
   align-items: center;
   gap: 0.65rem;
+  min-width: 0;
   padding: 0.35rem 0.55rem 0.1rem;
+  overflow: hidden;
 }
 
 .brand__mark,
@@ -557,6 +583,13 @@ html[data-theme="dark"] .login__card {
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 10rem;
+  opacity: 1;
+  transition:
+    max-width 0.2s cubic-bezier(0.2, 0, 0, 1),
+    opacity 0.12s ease;
 }
 
 .brand__logo span {
@@ -566,7 +599,32 @@ html[data-theme="dark"] .login__card {
 
 .nav {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.9rem;
+  flex: 1;
+  align-content: start;
+  min-width: 0;
+}
+
+.nav-group {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.nav-sec {
+  margin: 0 0.55rem 0.15rem;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rail-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  max-height: 1.2rem;
+  opacity: 1;
+  transition:
+    max-height 0.2s cubic-bezier(0.2, 0, 0, 1),
+    opacity 0.15s ease,
+    margin 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .brand {
@@ -596,6 +654,22 @@ html[data-theme="dark"] .login__card {
   font-weight: 600;
   font-size: 0.9rem;
   text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    padding 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.nav-label {
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 12rem;
+  opacity: 1;
+  transition:
+    max-width 0.2s cubic-bezier(0.2, 0, 0, 1),
+    opacity 0.12s ease;
 }
 
 .nav a:hover,
@@ -609,6 +683,105 @@ html[data-theme="dark"] .login__card {
   background: color-mix(in oklab, var(--accent) 88%, white);
   color: white;
   box-shadow: 0 10px 22px -14px rgba(224, 86, 140, 0.9);
+}
+
+.nav a svg,
+.rail-toggle svg {
+  flex-shrink: 0;
+}
+
+.rail-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.15rem;
+  height: 2.15rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.75rem;
+  background: none;
+  color: var(--rail-muted);
+  cursor: pointer;
+}
+
+.rail-toggle:hover {
+  background: var(--rail-hover);
+  color: var(--rail-ink);
+}
+
+.rail-toggle--mobile {
+  display: none;
+}
+
+.rail-toggle--desk {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  z-index: 8;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--rail-line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--rail-muted);
+  box-shadow: 0 2px 8px rgba(61, 42, 51, 0.12);
+  transform: translate(50%, -50%);
+}
+
+.rail-toggle--desk svg {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.rail-toggle--desk:hover {
+  background: var(--paper);
+  color: var(--accent);
+  border-color: color-mix(in oklab, var(--accent) 45%, var(--rail-line));
+}
+
+@media (min-width: 901px) {
+  .studio.is-rail-min .rail {
+    flex-basis: 4.75rem;
+    width: 4.75rem;
+    max-width: 4.75rem;
+    padding-inline: 0.55rem;
+  }
+
+  .studio.is-rail-min .brand {
+    gap: 0;
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .studio.is-rail-min .brand__logo,
+  .studio.is-rail-min .nav-label,
+  .studio.is-rail-min .nav-sec {
+    max-width: 0;
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .studio.is-rail-min .nav a {
+    gap: 0;
+    justify-content: center;
+    padding-inline: 0.55rem;
+  }
+
+  .studio.is-rail-min .rail-toggle--desk svg {
+    transform: rotate(180deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail,
+  .nav a,
+  .nav-sec,
+  .rail-toggle--desk svg {
+    transition: none;
+  }
 }
 
 .settings-tabs {
@@ -774,6 +947,7 @@ html[data-theme="dark"] .login__card {
 }
 
 .canvas {
+  flex: 1;
   min-width: 0;
   padding: 1.7rem 2rem 2.8rem;
 }
@@ -2145,6 +2319,38 @@ html[data-theme="dark"] .serp__desc {
   margin-bottom: 0.9rem;
 }
 
+.ship-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.ship-preview {
+  margin: 1rem 0 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1.1rem;
+  background: color-mix(in oklab, var(--accent) 8%, var(--paper));
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .ship-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.policy-editors {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.policy-subhead {
+  margin: 1.4rem 0 0.35rem;
+  font-size: 1.15rem;
+}
+
 .notice-list {
   display: grid;
   gap: 0.55rem;
@@ -2177,6 +2383,37 @@ html[data-theme="dark"] .serp__desc {
 
 .notice-row .ghost {
   width: auto;
+}
+
+.voucher-list {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.voucher-row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1.4fr) 7.5rem 7.5rem auto;
+  gap: 0.55rem;
+  align-items: end;
+}
+
+.voucher-row .ghost {
+  width: auto;
+  margin-bottom: 0.15rem;
+}
+
+@media (max-width: 900px) {
+  .voucher-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .voucher-row .ghost {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
 }
 
 .toast-stack {
@@ -3614,19 +3851,37 @@ html[data-theme="dark"] .serp__desc {
 
 @media (max-width: 900px) {
   .login,
-  .studio,
   .stats,
   .dash-grid,
   .dash-cats {
     grid-template-columns: 1fr;
   }
 
+  .studio {
+    flex-direction: column;
+  }
+
   .rail {
-    flex-direction: row;
-    align-items: center;
+    flex: none;
+    width: auto;
+    max-width: none;
+    flex-direction: column;
+    align-items: stretch;
     border-right: 0;
     border-bottom: 1px solid var(--rail-line);
     padding: 0.75rem 0.85rem;
+    transition: none;
+  }
+
+  .rail__body {
+    flex-direction: row;
+    align-items: center;
+    overflow: visible;
+    gap: 0;
+  }
+
+  .rail__top {
+    width: 100%;
   }
 
   .brand {
@@ -3637,9 +3892,41 @@ html[data-theme="dark"] .serp__desc {
     display: none;
   }
 
+  .rail-toggle--desk {
+    display: none;
+  }
+
+  .rail-toggle--mobile {
+    display: inline-flex;
+  }
+
   .nav {
+    display: none;
+  }
+
+  .studio.is-nav-open .rail__body {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .studio.is-nav-open .nav {
     display: flex;
-    flex: 1;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 0.75rem 0.5rem;
+  }
+
+  .studio.is-nav-open .nav-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.28rem;
+  }
+
+  .studio.is-nav-open .nav-sec {
+    flex: 1 1 100%;
+    margin: 0.15rem 0.35rem 0;
+    max-height: none;
+    opacity: 1;
   }
 
   .studio-bar__clock span,

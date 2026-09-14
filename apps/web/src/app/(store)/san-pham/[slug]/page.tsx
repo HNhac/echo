@@ -65,6 +65,13 @@ export default async function ProductPage({ params }: Props) {
     exclude: product.slug,
     limit: 4,
   });
+  const more =
+    related.length > 0
+      ? related
+      : await fetchProducts({
+          exclude: product.slug,
+          limit: 4,
+        });
 
   const image = mediaUrl(product.image);
 
@@ -93,13 +100,13 @@ export default async function ProductPage({ params }: Props) {
           <ProductDetailPanel product={product} />
         </Reveal>
 
-        {related.length ? (
-          <section className="mt-20 border-t border-[var(--border)] pt-14">
+        {more.length ? (
+          <section className="mt-16 border-t border-[var(--border)] pt-12">
             <h2 className="font-serif text-2xl font-medium tracking-tight text-[var(--ink)] sm:text-3xl">
               Cùng danh mục
             </h2>
             <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-              {related.map((p, i) => (
+              {more.map((p, i) => (
                 <Reveal key={p.id} delay={Math.min(i, 7) * 0.05}>
                   <ProductCard product={p} />
                 </Reveal>

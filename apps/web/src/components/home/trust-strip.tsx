@@ -1,13 +1,18 @@
-import { RefreshCcw, ShieldCheck, Truck, Sparkles } from "lucide-react";
+"use client";
 
-const items = [
-  { icon: Truck, title: "Freeship 500k", text: "Nội thành 2–4 ngày" },
-  { icon: RefreshCcw, title: "Đổi size 7 ngày", text: "Còn tag, chưa giặt" },
-  { icon: Sparkles, title: "Vải mềm da bé", text: "Cotton, không xù ngứa" },
-  { icon: ShieldCheck, title: "Size 90–140", text: "Khoảng 1–10 tuổi" },
-];
+import { RefreshCcw, ShieldCheck, Truck, Sparkles } from "lucide-react";
+import { useShopSettings } from "@/components/store/shop-settings-provider";
+import { freeShipTitle } from "@echo/shared";
 
 export function TrustStrip() {
+  const settings = useShopSettings();
+  const items = [
+    { icon: Truck, title: freeShipTitle(settings.freeshipFrom), text: `Nội thành ${settings.shipDaysInner}` },
+    { icon: RefreshCcw, title: "Đổi size 7 ngày", text: "Còn tag, chưa giặt" },
+    { icon: Sparkles, title: "Vải mềm da bé", text: "Cotton, không xù ngứa" },
+    { icon: ShieldCheck, title: "Size 90–140", text: "Khoảng 1–10 tuổi" },
+  ];
+
   return (
     <section className="bg-white/70">
       <div className="shop-wrap shop-stagger grid grid-cols-2 gap-6 py-8 sm:grid-cols-4 sm:py-10">

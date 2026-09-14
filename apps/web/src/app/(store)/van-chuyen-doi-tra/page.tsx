@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { ContentShell } from "@/components/layout/content-shell";
+import { ProductCopy } from "@/components/product/product-copy";
 import { metadataForPage } from "@/lib/page-seo";
+import { fetchShopSettings } from "@/lib/store-api";
+import { formatVnd, freeShipLabel } from "@echo/shared";
 
 export const dynamic = "force-dynamic";
 
@@ -12,26 +15,26 @@ export function generateMetadata(): Promise<Metadata> {
   );
 }
 
-export default function ShippingPage() {
+export default async function ShippingPage() {
+  const settings = await fetchShopSettings();
+
   return (
     <ContentShell
       title="Vận chuyển & đổi trả"
-      subtitle="Thông tin minh họa — chỉnh theo chính sách thật khi go-live."
+      subtitle="Giao nội thành, toàn quốc và đổi size khi còn tem mác."
       crumbs={[{ label: "Vận chuyển & đổi trả" }]}
     >
       <h2>Vận chuyển</h2>
       <p>
-        Đơn trong nội thành: <strong>2–4 ngày làm việc</strong>. Toàn quốc:{" "}
-        <strong>3–6 ngày làm việc</strong> tùy khu vực. Miễn phí ship cho đơn từ
-        mức demo (ví dụ 1.500.000₫).
+        Nội thành <strong>{settings.shipDaysInner}</strong> · Toàn quốc{" "}
+        <strong>{settings.shipDaysNation}</strong>. {freeShipLabel(settings.freeshipFrom)}
+        {settings.shipFee > 0 && settings.freeshipFrom > 0
+          ? `, phí ship ${formatVnd(settings.shipFee)} nếu đơn chưa đủ mốc.`
+          : "."}
       </p>
+      <ProductCopy value={settings.policyShipping} />
       <h2>Đổi trả</h2>
-      <p>
-        Trong <strong>14 ngày</strong> kể từ khi nhận hàng: sản phẩm còn tag,
-        chưa qua giặt/sử dụng. Đổi size hoặc hoàn tiền theo hướng dẫn CSKH.
-      </p>
-      <h2>Lưu ý</h2>
-      <p>Phụ kiện cá nhân hoá (khắc tên) có thể không áp dụng đổi trả.</p>
+      <ProductCopy value={settings.policyReturn} />
     </ContentShell>
   );
 }

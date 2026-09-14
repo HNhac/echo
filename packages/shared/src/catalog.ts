@@ -217,6 +217,13 @@ export function formatVnd(n: number): string {
   return `${new Intl.NumberFormat("vi-VN").format(n)}₫`;
 }
 
+export function formatVndShort(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return "0₫";
+  if (n >= 1_000_000 && n % 1_000_000 === 0) return `${n / 1_000_000} triệu`;
+  if (n >= 1_000 && n % 1_000 === 0) return `${n / 1_000}k`;
+  return formatVnd(n);
+}
+
 export function productUnitPrice(product: Product): number {
   return saleAmount(product) ?? product.price;
 }

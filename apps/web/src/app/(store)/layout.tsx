@@ -20,7 +20,7 @@ export default async function StoreLayout({
   const notices = activeShopNotices(settings.notices);
 
   return (
-    <StoreProviders>
+    <StoreProviders settings={settings}>
       {settings.seasonTheme !== "default" ? (
         <script
           dangerouslySetInnerHTML={{
@@ -38,7 +38,11 @@ export default async function StoreLayout({
       <AnnouncementBar items={settings.announcementEnabled ? notices : []} />
       <Header />
       <main className="relative z-[1] flex-1">{children}</main>
-      <Footer notes={settings.footerNotesEnabled ? notices : []} />
+      <Footer
+        notes={settings.footerNotesEnabled ? notices : []}
+        phone={settings.cskhPhone}
+        facebook={settings.facebookUrl}
+      />
     </StoreProviders>
   );
 }

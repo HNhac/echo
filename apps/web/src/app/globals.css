@@ -67,6 +67,13 @@ body {
     cursor: pointer;
   }
 
+  input[type="checkbox"],
+  input[type="radio"],
+  label:has(input[type="checkbox"]),
+  label:has(input[type="radio"]) {
+    cursor: pointer;
+  }
+
   button:disabled {
     cursor: not-allowed;
   }
@@ -270,9 +277,14 @@ body {
   .shop-in,
   .shop-stagger > *,
   .cart-pop,
-  .menu-in {
+  .menu-in,
+  .voucher-drawer,
+  .shop-modal-backdrop,
+  .shop-modal-panel {
     animation: none;
+    transition: none;
     transform: none;
+    opacity: 1;
   }
 
   .shop-lift:hover {
@@ -518,4 +530,182 @@ html[data-season] .shop-footer {
   border: 1px solid var(--border);
   background: color-mix(in oklab, var(--accent-warm) 55%, white);
   color: var(--ink);
+}
+
+.promo-box {
+  position: relative;
+  margin-top: 0.35rem;
+  padding: 1rem 0.95rem 0.85rem;
+  border: 1px dashed var(--accent);
+  border-radius: 0.85rem;
+  background: var(--surface);
+}
+
+.promo-box__title {
+  position: absolute;
+  top: 0;
+  left: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.45rem;
+  transform: translateY(-50%);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.promo-check {
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.2rem;
+  border-radius: 999px;
+  background: #22a45a;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.voucher-chip {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: 2rem;
+  padding: 0 0.95rem;
+  isolation: isolate;
+  border: 1px solid var(--accent);
+  background: #fff;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.voucher-chip.is-on,
+.voucher-chip:hover:not(:disabled):not(.is-off) {
+  background: color-mix(in oklab, var(--accent) 10%, white);
+}
+
+.voucher-chip::before,
+.voucher-chip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--accent);
+  transform: translateY(-50%);
+}
+
+.voucher-chip::before {
+  left: -0.3rem;
+}
+
+.voucher-chip::after {
+  right: -0.3rem;
+}
+
+.voucher-chip.is-off,
+.voucher-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+  filter: grayscale(0.7);
+  border-color: var(--ink-faint);
+  color: var(--ink-muted);
+}
+
+.voucher-chip.is-off::before,
+.voucher-chip.is-off::after,
+.voucher-chip:disabled::before,
+.voucher-chip:disabled::after {
+  box-shadow: 0 0 0 1px var(--ink-faint);
+}
+
+.coupon-card {
+  display: grid;
+  grid-template-columns: 4.75rem 1fr;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.coupon-card.is-on {
+  border-color: var(--accent);
+}
+
+.coupon-card.is-off {
+  opacity: 0.55;
+}
+
+.coupon-stub {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.coupon-stub::before,
+.coupon-stub::after {
+  content: "";
+  position: absolute;
+  right: -0.42rem;
+  width: 0.84rem;
+  height: 0.84rem;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.coupon-stub::before {
+  top: -0.42rem;
+}
+
+.coupon-stub::after {
+  bottom: -0.42rem;
+}
+
+.voucher-drawer {
+  transform: translateX(100%);
+  opacity: 1;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.voucher-drawer.is-in {
+  transform: translateX(0);
+}
+
+.shop-modal-backdrop {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.shop-modal-backdrop.is-in {
+  opacity: 1;
+}
+
+.shop-modal-panel {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease;
+}
+
+.shop-modal-panel.is-in {
+  opacity: 1;
+  transform: none;
 }

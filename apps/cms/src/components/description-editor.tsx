@@ -25,6 +25,7 @@ type Props = {
   value: string;
   onChange: (html: string) => void;
   className?: string;
+  placeholder?: string;
 };
 
 function Tool({
@@ -50,7 +51,7 @@ function Tool({
   );
 }
 
-export function DescriptionEditor({ value, onChange, className }: Props) {
+export function DescriptionEditor({ value, onChange, className, placeholder }: Props) {
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [emojiPos, setEmojiPos] = useState({ top: 0, left: 0 });
   const emojiWrap = useRef<HTMLDivElement>(null);
@@ -92,7 +93,7 @@ export function DescriptionEditor({ value, onChange, className }: Props) {
         HTMLAttributes: { class: "desc-inline-img" },
       }),
       Placeholder.configure({
-        placeholder: "Chất liệu, form mặc, bảo quản… Enter để xuống dòng.",
+        placeholder: placeholder || "Chất liệu, form mặc, bảo quản… Enter để xuống dòng.",
       }),
     ],
     content: descriptionToHtml(value) || "<p></p>",

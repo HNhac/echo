@@ -12,6 +12,7 @@ import {
   storeImagePaths,
   type Banner,
   type Category,
+  type Customer,
   type Order,
   type Product,
   type SeoPage,
@@ -25,6 +26,7 @@ export type Db = {
   products: Product[];
   orders: Order[];
   users: StaffUser[];
+  customers: Customer[];
   pages: SeoPage[];
   categories: Category[];
   banners: Banner[];
@@ -41,6 +43,7 @@ function emptyDb(): Db {
     products: [],
     orders: [],
     users: [seedOwner()],
+    customers: [],
     pages: mergeSeoPages([]),
     categories: DEFAULT_CATEGORIES.map((c) => ({ ...c })),
     banners: [],
@@ -102,6 +105,10 @@ export function loadDb(): Db {
   }
   if (!Array.isArray(raw.users) || raw.users.length === 0) {
     raw.users = [seedOwner()];
+    dirty = true;
+  }
+  if (!Array.isArray(raw.customers)) {
+    raw.customers = [];
     dirty = true;
   }
   const pages = mergeSeoPages(raw.pages);

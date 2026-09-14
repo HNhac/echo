@@ -132,7 +132,7 @@ export function TabSkeleton({ kind }: { kind: Tab }) {
   return (
     <div aria-busy="true" aria-label="Đang tải">
       {kind === "products" || kind === "banners" ? null : (
-        <StatBones count={kind === "orders" || kind === "users" ? 3 : 1} />
+        <StatBones count={kind === "orders" || kind === "users" || kind === "customers" ? 3 : 1} />
       )}
       {kind === "orders" ? <OrdersBones /> : null}
       {kind === "products" || kind === "banners" ? <ProductBones /> : null}
@@ -147,7 +147,7 @@ export function TabSkeleton({ kind }: { kind: Tab }) {
           ))}
         </div>
       ) : null}
-      {kind === "users" ? <UserBones /> : null}
+      {kind === "users" || kind === "customers" ? <UserBones /> : null}
     </div>
   );
 }
