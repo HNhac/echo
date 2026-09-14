@@ -501,7 +501,7 @@ export function vouchersForOrder(
 
 export function voucherDiscountOf(
   subtotal: number,
-  settings: Pick<ShopSettings, "vouchers" | "voucherCode" | "voucherAmount" | "voucherMin">,
+  settings: Pick<ShopSettings, "vouchers" | "voucherCode" | "voucherText" | "voucherAmount" | "voucherMin">,
   code?: string,
 ) {
   const found = voucherOf(settings, code);
