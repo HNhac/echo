@@ -138,13 +138,25 @@ export function TabSkeleton({ kind }: { kind: Tab }) {
       {kind === "products" || kind === "banners" ? <ProductBones /> : null}
       {kind === "seo" ? <SeoBones /> : null}
       {kind === "host" ? (
-        <div className="host-grid">
-          {Array.from({ length: 6 }, (_, i) => (
-            <article key={i} className="host-card">
+        <div className="host-studio">
+          <div className="host-hero">
+            <div>
+              <Bone className="sk--label" />
+              <Bone className="sk--num" />
+            </div>
+            <article className="host-card">
               <Bone className="sk--label" />
               <Bone className="sk--num" />
             </article>
-          ))}
+          </div>
+          <div className="host-grid">
+            {Array.from({ length: 6 }, (_, i) => (
+              <article key={i} className="host-card">
+                <Bone className="sk--label" />
+                <Bone className="sk--num" />
+              </article>
+            ))}
+          </div>
         </div>
       ) : null}
       {kind === "users" || kind === "customers" ? <UserBones /> : null}

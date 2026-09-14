@@ -139,6 +139,17 @@ def traffic(net: dict | None) -> dict | None:
     }
 
 
+def public_ip() -> str:
+    env = os.environ.get("PUBLIC_IP", "").strip()
+    if env:
+        return env
+    ips = [ip for ip in sh(["hostname", "-I"]).split() if ip]
+    for ip in ips:
+        if not re.match(r"^(10\.|127\.|172\.(1[6-9]|2\d|3[0-1])\.|192\.168\.)", ip):
+            return ip
+    return ips[0] if ips else ""
+
+
 def docker_stats() -> list:
     out = sh(
         [
@@ -160,10 +171,14 @@ def docker_stats() -> list:
 
 def main() -> None:
     net = net_dev()
+    lan = [ip for ip in sh(["hostname", "-I"]).split() if ip]
     stats = {
         "collectedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
         "source": "file",
         "hostname": os.uname().nodename,
+        "publicIp": public_ip(),
+        "publicHost": os.environ.get("PUBLIC_HOST", "").strip(),
+        "lanIps": lan,
         "uptimeSec": uptime_sec(),
         "cpuCount": cpu_count(),
         "load": loadavg(),

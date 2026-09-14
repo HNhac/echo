@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
+import { lookup } from "node:dns/promises";
 import { existsSync, readFileSync } from "node:fs";
-import { cpus, freemem, hostname, loadavg, totalmem, uptime } from "node:os";
+import { cpus, freemem, hostname, loadavg, networkInterfaces, totalmem, uptime } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import type { HostContainerStat, HostStats, HostVisitorStat } from "@echo/shared";
@@ -117,6 +118,44 @@ function ramFromProc() {
   return { total, used: total - available, available };
 }
 
+function lanIps() {
+  const out: string[] = [];
+  for (const rows of Object.values(networkInterfaces())) {
+    for (const row of rows ?? []) {
+      const family = String(row.family);
+      if (row.internal) continue;
+      if (family !== "IPv4" && family !== "4") continue;
+      if (!out.includes(row.address)) out.push(row.address);
+    }
+  }
+  return out;
+}
+
+function isPrivateIp(ip: string) {
+  return /^(10\.|127\.|172\.(1[6-9]|2\d|3[0-1])\.|192\.168\.)/.test(ip);
+}
+
+function pickLanIp(candidates: string[]) {
+  return candidates.find((ip) => !isPrivateIp(ip)) || candidates[0] || "";
+}
+
+async function publicAddress(opts: { fromFile?: string; source: "live" | "file" }) {
+  const env = process.env.PUBLIC_IP?.trim();
+  if (env) return env;
+  if (opts.fromFile?.trim()) return opts.fromFile.trim();
+  if (opts.source === "file") {
+    const host = process.env.PUBLIC_HOST?.trim();
+    if (host && !/localhost/i.test(host)) {
+      try {
+        return (await lookup(host, { family: 4 })).address;
+      } catch {
+        /* local DNS */
+      }
+    }
+  }
+  return pickLanIp(lanIps());
+}
+
 async function collectLive(): Promise<HostStats> {
   const df = await sh("df", ["-kP", "/"]);
   const visitors =
@@ -126,11 +165,15 @@ async function collectLive(): Promise<HostStats> {
       uniqueToday: null,
       note: "Log nginx không đọc được — user deploy chưa có quyền.",
     };
+  const ips = lanIps();
 
   return {
     collectedAt: new Date().toISOString(),
     source: "live",
     hostname: hostname(),
+    publicIp: await publicAddress({ source: "live" }),
+    publicHost: process.env.PUBLIC_HOST?.trim() || "",
+    lanIps: ips,
     uptimeSec: Math.round(uptime()),
     cpuCount: cpus().length,
     load: loadavg().map((n) => Math.round(n * 100) / 100),
@@ -158,15 +201,21 @@ export async function readHostStats(): Promise<HostStats> {
   }
   if (!base) base = await collectLive();
   const shop = visitSummary();
+  const ips = lanIps();
   return {
     ...base,
+    publicIp: await publicAddress({ fromFile: base.publicIp, source: base.source }),
+    publicHost: process.env.PUBLIC_HOST?.trim() || base.publicHost || "",
+    lanIps: ips.length ? ips : base.lanIps,
     visitors: {
       hitsToday: shop.hitsToday,
       uniqueToday: shop.uniqueToday,
       hitsYesterday: shop.hitsYesterday,
       uniqueYesterday: shop.uniqueYesterday,
       last7: shop.last7,
-      note: "Khách echothuvui.vn (không tính bot).",
+      recent: shop.recent,
+      guests: shop.guests,
+      note: "Khách shop (không tính bot).",
     },
   };
 }

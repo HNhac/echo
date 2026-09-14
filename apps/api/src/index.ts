@@ -50,7 +50,7 @@ import { loadDb, saveDb } from "./db.js";
 import { openapiSpec, swaggerAllowed, swaggerHtml } from "./openapi.js";
 import { compressLegacyUploads, readUpload, saveUpload } from "./uploads.js";
 import { readHostStats } from "./host-stats.js";
-import { clientIp, recordVisit } from "./visits.js";
+import { clientIp, recordVisit, sanitizeVisitPath } from "./visits.js";
 
 const PORT = Number(process.env.PORT ?? 4000);
 const HOST = process.env.HOST ?? "0.0.0.0";
@@ -332,9 +332,17 @@ app.delete("/admin/customers/:id", (c) => {
 });
 
 app.post("/visit", async (c) => {
+  let path = "/";
+  try {
+    const body = await c.req.json<{ path?: unknown }>();
+    if (typeof body.path === "string") path = sanitizeVisitPath(body.path);
+  } catch {
+    /* keepalive / empty */
+  }
   recordVisit({
     ip: clientIp(c.req.raw.headers),
     agent: c.req.header("user-agent") ?? "",
+    path,
   });
   return c.json({ ok: true });
 });

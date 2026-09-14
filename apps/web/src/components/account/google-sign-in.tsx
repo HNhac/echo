@@ -72,7 +72,7 @@ export function GoogleSignInButton({ onToken, onError, disabled }: Props) {
       const clientId = cfg?.clientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
       if (!clientId) {
         onErrorRef.current?.(
-          "Chưa bật Google trên local. Thêm GOOGLE_CLIENT_ID vào file .env rồi restart API.",
+          "Chưa bật đăng nhập Google. Thêm GOOGLE_CLIENT_ID vào .env trên server rồi restart API.",
         );
         return;
       }

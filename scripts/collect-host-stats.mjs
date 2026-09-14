@@ -141,6 +141,17 @@ function trafficFromNet(net) {
   };
 }
 
+function publicIp() {
+  const env = String(process.env.PUBLIC_IP || "").trim();
+  if (env) return env;
+  const ips = sh("hostname", ["-I"]).split(/\s+/).filter(Boolean);
+  return (
+    ips.find((ip) => !/^(10\.|127\.|172\.(1[6-9]|2\d|3[0-1])\.|192\.168\.)/.test(ip)) ||
+    ips[0] ||
+    ""
+  );
+}
+
 const net = netFromProc();
 const df = sh("df", ["-kP", "/"]);
 const visitors =
@@ -155,6 +166,9 @@ const stats = {
   collectedAt: new Date().toISOString(),
   source: "file",
   hostname: hostname(),
+  publicIp: publicIp(),
+  publicHost: String(process.env.PUBLIC_HOST || "").trim(),
+  lanIps: sh("hostname", ["-I"]).split(/\s+/).filter(Boolean),
   uptimeSec: Math.round(uptime()),
   cpuCount: cpus().length,
   load: loadavg().map((n) => Math.round(n * 100) / 100),

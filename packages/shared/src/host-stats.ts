@@ -6,12 +6,34 @@ export type HostContainerStat = {
   net: string;
 };
 
+export type HostRecentVisit = {
+  at: string;
+  ip: string;
+  path: string;
+};
+
+export type HostGuestPage = {
+  path: string;
+  hits: number;
+};
+
+export type HostGuestStat = {
+  ip: string;
+  hits: number;
+  todayHits: number;
+  lastAt: string;
+  lastPath: string;
+  pages: HostGuestPage[];
+};
+
 export type HostVisitorStat = {
   hitsToday: number | null;
   uniqueToday: number | null;
   hitsYesterday?: number | null;
   uniqueYesterday?: number | null;
   last7?: Array<{ date: string; hits: number; uniques: number }>;
+  recent?: HostRecentVisit[];
+  guests?: HostGuestStat[];
   note?: string;
 };
 
@@ -28,6 +50,9 @@ export type HostStats = {
   source: "live" | "file";
   stale?: boolean;
   hostname: string;
+  publicIp?: string;
+  publicHost?: string;
+  lanIps?: string[];
   uptimeSec: number;
   cpuCount: number;
   load: number[];

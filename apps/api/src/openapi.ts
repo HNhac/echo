@@ -237,7 +237,7 @@ export const openapiSpec = {
     "/admin/host-stats": {
       get: {
         tags: ["CMS"],
-        summary: "RAM, disk, Docker, lượt truy cập VPS",
+        summary: "RAM, disk, IP, Docker, lượt truy cập và IP khách xem trang",
         security: adminSecurity(),
         parameters: [adminKey],
         responses: { "200": { description: "HostStats" }, "403": { description: "Không phải chủ studio" } },
